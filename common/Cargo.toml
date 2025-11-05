@@ -1,0 +1,10 @@
+[package]
+name = "solify-common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { workspace = true }
+borsh = { workspace = true }
+thiserror = { workspace = true }
+solana-sdk = { workspace = true }
