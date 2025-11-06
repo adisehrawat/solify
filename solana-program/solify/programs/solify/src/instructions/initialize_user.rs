@@ -1,8 +1,6 @@
-
 use anchor_lang::prelude::*;
 
-// use crate::error::SolifyError;
-use crate::state::user_config::UserConfig;
+use crate::{ events::UserProfileCreated, state::user_config::UserConfig };
 
 #[derive(Accounts)]
 pub struct InitializeUser<'info> {
@@ -21,14 +19,15 @@ pub struct InitializeUser<'info> {
 
 impl<'info> InitializeUser<'info> {
     pub fn initialize_user(&mut self) -> Result<()> {
-        self.user_config.set_inner(UserConfig {
-            authority: self.authority.key(),
-            total_tests_generated: 0,
-            programs_tested: vec![],
-            created_at: Clock::get()?.unix_timestamp,
-            last_generated_at: 0,
-            bump: self.user_config.bump,
+        let clock = Clock::get()?;
+
+        let bump = self.user_config.bump;
+        self.user_config.initialize(self.authority.key(), bump, clock.unix_timestamp);
+        emit!(UserProfileCreated {
+            user: self.authority.key(),
+            timestamp: clock.unix_timestamp,
         });
+        msg!("User profile created for: {}", self.authority.key());
         Ok(())
     }
 }

@@ -4,102 +4,286 @@ use serde::{Deserialize, Serialize};
 use solana_sdk::pubkey::Pubkey;
 
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ParsedIdl {
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlData {
     pub name: String,
     pub version: String,
-    pub instructions: Vec<Instruction>,
-    pub accounts: Vec<AccountDef>,
-    pub types: Vec<TypeDef>,
+    pub instructions: Vec<IdlInstruction>,
+    #[serde(default)]
+    pub accounts: Vec<IdlAccount>,
+    #[serde(default)]
+    pub types: Vec<IdlTypeDef>,
+    #[serde(default)]
+    pub errors: Vec<IdlError>,
+    #[serde(default)]
+    pub constants: Vec<IdlConstant>,
+    #[serde(default)]
+    pub events: Vec<IdlEvent>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Instruction {
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlError {
+    pub code: u32,
     pub name: String,
-    pub accounts: Vec<AccountInfo>,
-    pub args: Vec<ArgumentDef>,
+    pub msg: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlConstant {
+    pub name: String,
+    pub constant_type: String,
+    pub value: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlEvent {
+    pub name: String,
+    #[serde(default)]
+    pub discriminator: Vec<u8>,
+    pub fields: Vec<IdlField>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlInstruction {
+    pub name: String,
+    pub accounts: Vec<IdlAccountItem>,
+    pub args: Vec<IdlField>,
     pub docs: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AccountInfo {
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlAccountItem {
     pub name: String,
     pub is_mut: bool,
     pub is_signer: bool,
     pub is_optional: bool,
     pub docs: Vec<String>,
-    pub constraints: Vec<Constraint>,
+    pub pda: Option<IdlPda>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ArgumentDef {
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlPda {
+    pub seeds: Vec<IdlSeed>,
+    #[serde(default)]
+    pub program: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlSeed {
+    pub kind: String,
+    #[serde(default)]
+    pub path: String,
+    #[serde(default)]
+    pub value: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlAccount {
     pub name: String,
-    pub arg_type: ArgType,
+    pub fields: Vec<IdlField>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ArgType {
-    U8,
-    U16,
-    U32,
-    U64,
-    U128,
-    I8,
-    I16,
-    I32,
-    I64,
-    I128,
-    Bool,
-    String { max_length: Option<u32> },
-    Pubkey,
-    Vec {
-        inner_type: Box<ArgType>,
-        max_length: Option<u32>,
-    },
-    Option { inner_type: Box<ArgType> },
-    Custom(String),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Constraint {
-    Init,
-    Mut,
-    Seeds(Vec<Seed>),
-    HasOne(String),
-    Signer,
-    Owner(String),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Seed {
-    Static(String),
-    AccountKey(String),
-    Argument(String),
-    Unknown(String),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AccountDef {
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlField {
     pub name: String,
+    pub field_type: String, 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct IdlTypeDef {
+    pub name: String,
+    pub kind: String, 
+    pub fields: Vec<String>, 
+}
+
+
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct ParsedIdl {
+    #[serde(default)]
+    pub address: String,
+    #[serde(default)]
+    pub metadata: IdlMetadata,
+    pub instructions: Vec<Instruction>,
+    #[serde(default)]
+    pub accounts: Vec<AccountDef>,
+    #[serde(default)]
+    pub types: Vec<TypeDef>,
+    #[serde(default)]
+    pub errors: Vec<ErrorDef>,
+    #[serde(default)]
+    pub constants: Vec<ConstantDef>,
+    #[serde(default)]
+    pub events: Vec<EventDef>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct ErrorDef {
+    pub code: u32,
+    pub name: String,
+    #[serde(default)]
+    pub msg: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct ConstantDef {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub constant_type: String,
+    pub value: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct EventDef {
+    pub name: String,
+    #[serde(default)]
+    pub discriminator: Vec<u8>,
+    #[serde(default)]
     pub fields: Vec<FieldDef>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FieldDef {
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize, Default)]
+pub struct IdlMetadata {
     pub name: String,
-    pub field_type: String,
+    pub version: String,
+    #[serde(default)]
+    pub spec: String,
+    #[serde(default)]
+    pub description: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct Instruction {
+    pub name: String,
+    #[serde(default)]
+    pub discriminator: Vec<u8>,
+    pub accounts: Vec<AccountInfo>,
+    pub args: Vec<ArgumentDef>,
+    #[serde(default)]
+    pub docs: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct AccountInfo {
+    pub name: String,
+    #[serde(default)]
+    pub writable: bool,
+    #[serde(default)]
+    pub signer: bool,
+    #[serde(default)]
+    pub optional: bool,
+    #[serde(default)]
+    pub address: Option<String>,
+    #[serde(default)]
+    pub pda: Option<PdaConfig>,
+    #[serde(default)]
+    pub docs: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct PdaConfig {
+    pub seeds: Vec<PdaSeed>,
+    #[serde(default)]
+    pub program: Option<PdaProgram>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct PdaProgram {
+    pub kind: String,
+    #[serde(default)]
+    pub value: Option<Vec<u8>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct PdaSeed {
+    pub kind: String,
+    #[serde(default)]
+    pub path: String,
+    #[serde(default)]
+    pub value: Option<Vec<u8>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct ArgumentDef {
+    pub name: String,
+    
+    #[serde(rename = "type")]
+    pub arg_type: IdlType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(untagged)]
+pub enum IdlType {
+    Simple(String),
+    Vec {
+        vec: Box<IdlType>
+    },
+    Option {
+        option: Box<IdlType>
+    },
+    Array {
+        array: (Box<IdlType>, usize)
+    },
+    Defined {
+        defined: DefinedType
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(untagged)]
+pub enum DefinedType {
+    Simple(String),
+    Generic {
+        name: String,
+        #[serde(default)]
+        generics: Vec<IdlType>,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct AccountDef {
+    pub name: String,
+    
+    #[serde(default)]
+    pub discriminator: Vec<u8>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct FieldDef {
+    pub name: String,
+    
+    #[serde(rename = "type")]
+    pub field_type: IdlType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct TypeDef {
     pub name: String,
+    
+    #[serde(rename = "type")]
     pub type_kind: TypeKind,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(tag = "kind")]
 pub enum TypeKind {
-    Struct { fields: Vec<FieldDef> },
-    Enum { variants: Vec<String> },
+    #[serde(rename = "struct")]
+    Struct { 
+        fields: Vec<FieldDef> 
+    },
+    
+    #[serde(rename = "enum")]
+    Enum { 
+        variants: Vec<EnumVariant> 
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+pub struct EnumVariant {
+    pub name: String,
+    
+    #[serde(default)]
+    pub fields: Option<Vec<FieldDef>>,
 }
 
 

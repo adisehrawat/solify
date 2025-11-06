@@ -1,0 +1,437 @@
+{
+    "address": "Dndpsh6zGRiyMtH3rVBxbhx3eZkzeiDfxch3q6prNPaF",
+    "metadata": {
+      "name": "anchor_dice_game_q4_25",
+      "version": "0.1.0",
+      "spec": "0.1.0",
+      "description": "Created with Anchor"
+    },
+    "instructions": [
+      {
+        "name": "initialize",
+        "discriminator": [
+          175,
+          175,
+          109,
+          31,
+          13,
+          152,
+          155,
+          237
+        ],
+        "accounts": [
+          {
+            "name": "house",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "vault",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    118,
+                    97,
+                    117,
+                    108,
+                    116
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "house"
+                }
+              ]
+            }
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          }
+        ],
+        "args": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "place_bet",
+        "discriminator": [
+          222,
+          62,
+          67,
+          220,
+          63,
+          166,
+          126,
+          33
+        ],
+        "accounts": [
+          {
+            "name": "player",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "house"
+          },
+          {
+            "name": "vault",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    118,
+                    97,
+                    117,
+                    108,
+                    116
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "house"
+                }
+              ]
+            }
+          },
+          {
+            "name": "bet",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    98,
+                    101,
+                    116
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "vault"
+                },
+                {
+                  "kind": "arg",
+                  "path": "seed"
+                }
+              ]
+            }
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          }
+        ],
+        "args": [
+          {
+            "name": "seed",
+            "type": "u128"
+          },
+          {
+            "name": "roll",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "refund_bet",
+        "discriminator": [
+          209,
+          182,
+          226,
+          96,
+          55,
+          121,
+          83,
+          183
+        ],
+        "accounts": [
+          {
+            "name": "player",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "house"
+          },
+          {
+            "name": "vault",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    118,
+                    97,
+                    117,
+                    108,
+                    116
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "house"
+                }
+              ]
+            }
+          },
+          {
+            "name": "bet",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    98,
+                    101,
+                    116
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "vault"
+                },
+                {
+                  "kind": "account",
+                  "path": "bet.seed",
+                  "account": "Bet"
+                }
+              ]
+            }
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          }
+        ],
+        "args": []
+      },
+      {
+        "name": "resolve_bet",
+        "discriminator": [
+          137,
+          132,
+          33,
+          97,
+          48,
+          208,
+          30,
+          159
+        ],
+        "accounts": [
+          {
+            "name": "house",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "player",
+            "docs": [
+              "CHECK"
+            ],
+            "writable": true
+          },
+          {
+            "name": "vault",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    118,
+                    97,
+                    117,
+                    108,
+                    116
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "house"
+                }
+              ]
+            }
+          },
+          {
+            "name": "bet",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    98,
+                    101,
+                    116
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "vault"
+                },
+                {
+                  "kind": "account",
+                  "path": "bet.seed",
+                  "account": "Bet"
+                }
+              ]
+            }
+          },
+          {
+            "name": "instruction_sysvar",
+            "docs": [
+              "CHECK"
+            ],
+            "address": "Sysvar1nstructions1111111111111111111111111"
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          }
+        ],
+        "args": [
+          {
+            "name": "sig",
+            "type": "bytes"
+          }
+        ]
+      }
+    ],
+    "accounts": [
+      {
+        "name": "Bet",
+        "discriminator": [
+          147,
+          23,
+          35,
+          59,
+          15,
+          75,
+          155,
+          32
+        ]
+      }
+    ],
+    "errors": [
+      {
+        "code": 6000,
+        "name": "BumpError",
+        "msg": "Bump error"
+      },
+      {
+        "code": 6001,
+        "name": "Overflow",
+        "msg": "Overflow"
+      },
+      {
+        "code": 6002,
+        "name": "MinimumBet",
+        "msg": "Minimum bet is 0.01 Sol"
+      },
+      {
+        "code": 6003,
+        "name": "MaximumBet",
+        "msg": "Maximum bet exceeded"
+      },
+      {
+        "code": 6004,
+        "name": "MinimumRoll",
+        "msg": "Minimum roll is 2"
+      },
+      {
+        "code": 6005,
+        "name": "MaximumRoll",
+        "msg": "Maximum roll is 96"
+      },
+      {
+        "code": 6006,
+        "name": "TimeoutNotReached",
+        "msg": "Timeout not yet reached"
+      },
+      {
+        "code": 6007,
+        "name": "Ed25519Header",
+        "msg": "Ed25519 Header Error"
+      },
+      {
+        "code": 6008,
+        "name": "Ed25519Pubkey",
+        "msg": "Ed25519 Pubkey Error"
+      },
+      {
+        "code": 6009,
+        "name": "Ed25519Message",
+        "msg": "Ed25519 Message Error"
+      },
+      {
+        "code": 6010,
+        "name": "Ed25519Signature",
+        "msg": "Ed25519 Signature Error"
+      },
+      {
+        "code": 6011,
+        "name": "Ed25519Program",
+        "msg": "Ed25119 Program Error"
+      },
+      {
+        "code": 6012,
+        "name": "Ed25519Accounts",
+        "msg": "Ed25119 Accounts Error"
+      },
+      {
+        "code": 6013,
+        "name": "Ed25519DataLength",
+        "msg": "Ed25119 Data Length Error"
+      }
+    ],
+    "types": [
+      {
+        "name": "Bet",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "player",
+              "type": "pubkey"
+            },
+            {
+              "name": "seed",
+              "type": "u128"
+            },
+            {
+              "name": "slot",
+              "type": "u64"
+            },
+            {
+              "name": "amount",
+              "type": "u64"
+            },
+            {
+              "name": "roll",
+              "type": "u8"
+            },
+            {
+              "name": "bump",
+              "type": "u8"
+            }
+          ]
+        }
+      }
+    ]
+  }
