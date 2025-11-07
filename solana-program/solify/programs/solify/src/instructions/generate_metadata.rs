@@ -52,7 +52,7 @@ impl<'info> GenerateMetadata<'info> {
         msg!("Execution order: {:?}", execution_order);
 
         let analyzer = DependencyAnalyzer::new();
-        let test_metadata = analyzer.analyze_dependencies(&idl_data, &execution_order)?;
+        let test_metadata = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id.to_string())?;
 
         msg!("Dependency analysis completed successfully");
         msg!("Generated {} account dependencies", test_metadata.account_dependencies.len());

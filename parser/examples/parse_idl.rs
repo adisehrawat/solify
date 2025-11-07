@@ -3,10 +3,13 @@
 
 use solify_parser::{parse_idl, get_pda_accounts, get_signer_accounts, get_writable_accounts};
 
+use solify_analyzer_onchain::DependencyAnalyzer;
+
+
 fn main() {
     println!("=== Solify IDL Parser ===\n");
     
-    let idl_path = concat!(env!("CARGO_MANIFEST_DIR"), "/idls/dice.json");
+    let idl_path = concat!(env!("CARGO_MANIFEST_DIR"), "/idls/journal.json");
     
     println!(" Reading IDL from: {}", idl_path);
     
@@ -19,6 +22,7 @@ fn main() {
     };
     
     println!("Successfully parsed IDL!\n");
+    println!("\n{:#?}\n", idl_data);
 
     println!("Program: {} (v{})", idl_data.name, idl_data.version);
     println!("Instructions: {}", idl_data.instructions.len());
@@ -134,5 +138,20 @@ fn main() {
             }
         }
     }
+    
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━-------------------");
+    println!("On chain analysis:");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━--------------------");
+
+    let execution_order: [String; 3] = [
+        String::from("create_journal_entry"), 
+        String::from("update_journal_entry"), 
+        String::from("delete_journal_entry")
+    ];
+    let program_id: String = String::from("94L2mJxVu6ZMmHaGsCHRQ65Kk2mea6aTnwWjSdfSsmBC");
+
+    let analyzer = DependencyAnalyzer::new();
+    let tests = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id).unwrap();
+    println!("Test metadata: {:#?}", tests);
 }
 

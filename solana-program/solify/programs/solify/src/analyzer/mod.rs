@@ -13,7 +13,6 @@ pub use test_case_generator::*;
 use anchor_lang::prelude::*;
 use solana_program::hash::hash;
 use crate::types::{IdlData, TestMetadata};
-use crate::error::SolifyError;
 
 pub struct DependencyAnalyzer;
 
@@ -26,12 +25,13 @@ impl DependencyAnalyzer {
         &self,
         idl_data: &IdlData,
         execution_order: &[String],
+        program: String,
     ) -> Result<TestMetadata> {
         msg!("Starting dependency analysis...");
 
         // Build account registry
         let dependency_analyzer = DependencyAnalyzerImpl;
-        let account_registry = dependency_analyzer.build_account_registry(idl_data)?;
+        let account_registry = dependency_analyzer.build_account_registry(idl_data, &program.to_string())?;
         msg!("Account registry built with {} accounts", account_registry.accounts.len());
 
         // Build dependency graph

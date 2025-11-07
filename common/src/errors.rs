@@ -39,6 +39,9 @@ pub enum SolifyError {
 
     #[error("Unknown error: {0}")]
     Unknown(String),
+
+    #[error("Dependency analysis failed: {0}")]
+    DependencyAnalysisFailed(String),
 }
 
 pub type Result<T> = std::result::Result<T, SolifyError>;

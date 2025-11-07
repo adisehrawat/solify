@@ -17,5 +17,5 @@ anyhow = "1.0"
 
 # Common types
 solify-common = { path = "../common" }
-
+solify-analyzer-onchain = { path = "../analyzer_onchain"}
 

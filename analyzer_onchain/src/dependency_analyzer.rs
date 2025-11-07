@@ -1,7 +1,5 @@
-use anchor_lang::prelude::*;
-use crate::types::{IdlData, IdlInstruction, IdlAccountItem};
-use crate::error::SolifyError;
-use crate::constants::{MAX_INSTRUCTIONS, MAX_ACCOUNTS_PER_INSTRUCTION};
+pub use solify_common::types::{IdlData, IdlInstruction, IdlAccountItem};
+pub use solify_common::errors::{SolifyError, Result};
 
 #[derive(Debug, Clone)]
 pub struct AccountInfo {
@@ -84,7 +82,7 @@ pub enum DependencyType {
     SeedDependency,
     Constraint,
 }
-
+#[derive(Debug, Clone)]
 pub struct AccountRegistry {
     pub accounts: Vec<AccountInfo>,
 }
@@ -164,10 +162,10 @@ impl DependencyAnalyzerImpl {
         if let Some(pda_info) = &account_item.pda {
             is_pda = true;
 
-            if pda_info.program == Some(program.clone()) {
-                program_pda = pda_info.program.clone().unwrap().to_string();
+            if pda_info.program == *program {
+                program_pda = pda_info.program.clone();
             } else {
-                program_pda = program.clone().to_string();
+                program_pda = program.clone();
             }
             for idl_seed in &pda_info.seeds {
                 let seed_type = match idl_seed.kind.as_str() {
@@ -175,7 +173,7 @@ impl DependencyAnalyzerImpl {
                     "arg" | "argument" => SeedType::Argument,
                     "account" => SeedType::AccountKey,
                     _ => {
-                        msg!("Unknown seed kind: {}, defaulting to Static", idl_seed.kind);
+                        println!("Unknown seed kind: {}, defaulting to Static", idl_seed.kind);
                         SeedType::Static
                     }
                 };
@@ -202,7 +200,7 @@ impl DependencyAnalyzerImpl {
                 value: Some(format!("{} seeds", seeds.len())),
             });
             
-            msg!("Found PDA account '{}' with {} seeds", account_item.name, seeds.len());
+            println!("Found PDA account '{}' with {} seeds", account_item.name, seeds.len());
         }
 
         if account_item.is_mut == true {
@@ -230,7 +228,7 @@ impl DependencyAnalyzerImpl {
                     constraint_type: ConstraintType::Init,
                     value: None,
                 });
-                msg!("Inferred init constraint for '{}' in instruction '{}'", 
+                println!("Inferred init constraint for '{}' in instruction '{}'", 
                      account_item.name, instruction.name);
             }
         }
@@ -274,7 +272,7 @@ impl DependencyAnalyzerImpl {
             let instruction = idl_data.instructions
                 .iter()
                 .find(|i| &i.name == instruction_name)
-                .ok_or(SolifyError::InvalidInstructionOrder)?;
+                .ok_or(SolifyError::InvalidInstructionOrder(instruction_name.clone()))?;
 
             let node = self.create_instruction_node(instruction, registry);
             graph.nodes.push(node);

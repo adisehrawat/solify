@@ -1,0 +1,26 @@
+[package]
+name = "solify-analyzer-onchain"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Graph algorithms for dependency analysis
+petgraph = "0.8.3"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "2.0.17"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+log = "0.4"
+
+# Internal dependencies
+solify-common = { path = "../common" }
+
+[dev-dependencies]
+pretty_assertions = "1.4"
+

@@ -311,7 +311,7 @@ pub struct AccountDependency {
 pub struct PdaInit {
     pub account_name: String,
     pub seeds: Vec<SeedComponent>,
-    pub program_id: Pubkey,
+    pub program_id: String, // Program ID as a string
     pub space: Option<u64>,
 }
 
@@ -456,3 +456,7 @@ pub struct ProgramTestHistory {
     pub last_generated_at: i64,
     pub idl_hash: [u8; 32],
 }
+
+
+
+// --------------------------------------------------
