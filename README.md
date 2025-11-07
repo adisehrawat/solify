@@ -1,14 +1,12 @@
 # Solify - Automated Test Generator for Solana Programs
 
-solify/
-├── common/                    # Shared types and utilities
-├── parser/                    # IDL parsing library
-├── analyzer_onchain/          # On-chain dependency analysis
-├── generator/                 # Test file generation
-├── client/                    # Solana RPC client
-├── cli/                       # Command-line interface
-└── solana-program/            # On-chain Solana program
-    └── solify/                # Anchor project
+- analyzer = all the analyze part will be done under this folder
+- common = shared library for structs, errors
+- parser = IDL parser library
+- client = solan RPC client for handling on chain transactions
+- cli = Interface for user
+- solana-program = on chain program
+- generator = to generate tests
 
 Steps to build:-
 1. IDL parser
