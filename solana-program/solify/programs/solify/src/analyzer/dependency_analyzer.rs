@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::types::{IdlData, IdlInstruction, IdlAccountItem};
 use crate::error::SolifyError;
-use crate::constants::{MAX_INSTRUCTIONS, MAX_ACCOUNTS_PER_INSTRUCTION};
 
 #[derive(Debug, Clone)]
 pub struct AccountInfo {

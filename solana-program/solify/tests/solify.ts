@@ -89,6 +89,8 @@ describe("solify", () => {
   const userPubkey = user.publicKey;
 
   let userPda: PublicKey;
+  let testMetadataPda: PublicKey;
+  let idlStoragePda: PublicKey;
 
   const idlData = {
     name: "journal",
@@ -273,7 +275,7 @@ describe("solify", () => {
     errors: [],
     constants: [],
     events: [],
-  }; 
+  };
 
   const programId = new PublicKey("67GqHdXxaRL3SYuRn29tzbRjMJCbNxaCAyaZpKNXu76b");
   const programName = "journal";
@@ -282,12 +284,14 @@ describe("solify", () => {
   console.log("userPubkey", userPubkey.toBase58());
 
   before(async () => {
-    const airdropSig = await connection.requestAirdrop(userPubkey, LAMPORTS_PER_SOL * 10);
+    const airdropSig = await connection.requestAirdrop(userPubkey, LAMPORTS_PER_SOL * 100);
     await connection.confirmTransaction(airdropSig);
 
     console.log("user balance", await connection.getBalance(userPubkey));
 
     [userPda] = PublicKey.findProgramAddressSync([Buffer.from("user_config"), userPubkey.toBuffer()], program.programId);
+    [testMetadataPda] = PublicKey.findProgramAddressSync([Buffer.from("tests_metadata"), programId.toBuffer(), userPubkey.toBuffer()], program.programId);
+    [idlStoragePda] = PublicKey.findProgramAddressSync([Buffer.from("idl_storage"), programId.toBuffer(), userPubkey.toBuffer()], program.programId);
   });
 
   it("should initialize user", async () => {
@@ -301,48 +305,45 @@ describe("solify", () => {
     const userConfig = await program.account.userConfig.fetch(userPda);
     assert.equal(userConfig.authority.toBase58(), userPubkey.toBase58());
     assert.equal(userConfig.totalTestsGenerated.toNumber(), 0);
-    assert.equal(userConfig.programsTested.length, 0);
     assert.equal(userConfig.lastGeneratedAt.toNumber(), 0);
   });
 
+  it("should store idl data", async () => {
+
+    
+    const tx = await program.methods
+      .storeIdlData(idlData, programId)
+      .accountsStrict({
+        idlStorage: idlStoragePda,
+        authority: userPubkey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([user])
+      .rpc();
+    console.log("tx", tx);
+
+    const idlStorage = await program.account.idlStorage.fetch(idlStoragePda);
+    assert.equal(idlStorage.authority.toBase58(), userPubkey.toBase58());
+    assert.equal(idlStorage.programId.toBase58(), programId.toBase58());
+    console.log("idlStorage", idlStorage.idlData.instructions);
+  });
   it("should generate metadata", async () => {
+    const tx = await program.methods
+      .generateMetadata( executionOrder, programId, programName)
+      .accountsStrict({
+        userConfig: userPda,
+        authority: userPubkey,
+        idlStorage: idlStoragePda,
+        testMetadataConfig: testMetadataPda,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([user])
+      .rpc();
+    console.log("tx", tx);
 
-    try {
-      const computeUnitsIx = ComputeBudgetProgram.setComputeUnitLimit({
-        units: 5_600_000
-      });
+    const testMetadataConfig = await program.account.testMetadataConfig.fetch(testMetadataPda);
 
-      const tx = await program.methods
-        .generateMetadata(idlData as IdlData, executionOrder, programId, programName)
-        .accountsStrict({
-          userConfig: userPda,
-          authority: userPubkey,
-          systemProgram: SystemProgram.programId,
-        })
-        .preInstructions([computeUnitsIx])
-        .signers([user])
-        .rpc();
-      
-      console.log("TRANSACTION SUCCESSFUL");
-      console.log("Transaction signature:", tx);
+    console.log("testMetadataConfig", testMetadataConfig);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const txDetails = await program.provider.connection.getTransaction(tx, { 
-        commitment: "confirmed",
-        maxSupportedTransactionVersion: 0
-      });
-      
-      if (txDetails?.meta?.logMessages) {
-        const logs = txDetails.meta.logMessages;
-        
-        console.log("PROGRAM LOGS");
-        console.log(logs);
-      }
-      
-    } catch (error) {
-      console.log("\nERROR:", error);
-      throw error;
-    } 
   });  
 });

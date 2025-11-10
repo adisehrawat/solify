@@ -1,8 +1,11 @@
 use anchor_lang::prelude::*;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct AccountDependency {
+    #[max_len(50)]
     pub account_name: String,
+    #[max_len(10, 50)]
     pub depends_on: Vec<String>,
     pub is_pda: bool,
     pub is_signer: bool,
@@ -11,35 +14,40 @@ pub struct AccountDependency {
     pub initialization_order: u8,
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct PdaInit {
+    #[max_len(50)]
     pub account_name: String,
+    #[max_len(10)]
     pub seeds: Vec<SeedComponent>,
     pub program_id: Pubkey,
     pub space: Option<u64>,
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct SeedComponent {
     pub seed_type: SeedType,
+    #[max_len(50)]
     pub value: String,
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum SeedType {
     Static,
     AccountKey,
     Argument,
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct SetupRequirement {
     pub requirement_type: SetupType,
+    #[max_len(200)]
     pub description: String,
+    #[max_len(10, 50)]
     pub dependencies: Vec<String>,
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum SetupType {
     CreateKeypair,
     FundAccount,
@@ -48,40 +56,50 @@ pub enum SetupType {
     CreateAta,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct InstructionTestCases {
+    #[max_len(50)]
     pub instruction_name: String,
+    #[max_len(3)]
     pub arguments: Vec<ArgumentInfo>,
+    #[max_len(3)]
     pub positive_cases: Vec<TestCase>,
+    #[max_len(3)]
     pub negative_cases: Vec<TestCase>,
 }
 
-// Simplified version for events
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
-pub struct InstructionTestCasesEvent {
-    pub instruction_name: String,
-    pub arguments: Vec<ArgumentInfoEvent>,
-    pub positive_case_count: u32,
-    pub negative_case_count: u32,
-}
+// // Simplified version for events
+// #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
+// pub struct InstructionTestCasesEvent {
+//     #[max_len(50)]
+//     pub instruction_name: String,
+//     #[max_len(20)]
+//     pub arguments: Vec<ArgumentInfoEvent>,
+//     pub positive_case_count: u32,
+//     pub negative_case_count: u32,
+// }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct ArgumentInfo {
+    #[max_len(50)]
     pub name: String,
     pub arg_type: ArgumentType,
+    #[max_len(5)]
     pub constraints: Vec<ArgumentConstraint>,
     pub is_optional: bool,
 }
 
-// Simplified version for events
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
-pub struct ArgumentInfoEvent {
-    pub name: String,
-    pub arg_type_name: String,
-    pub is_optional: bool,
-}
+// // Simplified version for events
+// #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
+// pub struct ArgumentInfoEvent {
+//     #[max_len(50)]
+//     pub name: String,
+//     #[max_len(100)]
+//     pub arg_type_name: String,
+//     pub is_optional: bool,
+// }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum ArgumentType {
     U8,
     U16,
@@ -96,8 +114,8 @@ pub enum ArgumentType {
     Bool,
     String { max_length: Option<u32> },
     Pubkey,
-    Vec { inner_type: Box<ArgumentType>, max_length: Option<u32> },
-    Option { inner_type: Box<ArgumentType> },
+    VecType { #[max_len(50)] inner_type_name: String, max_length: Option<u32> },
+    OptionType { #[max_len(50)] inner_type_name: String },
 }
 
 impl ArgumentType {
@@ -122,21 +140,21 @@ impl ArgumentType {
                 }
             },
             ArgumentType::Pubkey => "Pubkey".to_string(),
-            ArgumentType::Vec { inner_type, max_length } => {
+            ArgumentType::VecType { inner_type_name, max_length } => {
                 if let Some(max) = max_length {
-                    format!("Vec<{}>(max:{})", inner_type.to_string(), max)
+                    format!("Vec<{}>(max:{})", inner_type_name, max)
                 } else {
-                    format!("Vec<{}>", inner_type.to_string())
+                    format!("Vec<{}>", inner_type_name)
                 }
             },
-            ArgumentType::Option { inner_type } => {
-                format!("Option<{}>", inner_type.to_string())
+            ArgumentType::OptionType { inner_type_name } => {
+                format!("Option<{}>", inner_type_name)
             },
         }
     }
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum ArgumentConstraint {
     Min { value: i64 },
     Max { value: i64 },
@@ -146,15 +164,17 @@ pub enum ArgumentConstraint {
     MinLength { value: u32 },
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct TestCase {
     pub test_type: TestCaseType,
+    #[max_len(50)]
     pub description: String,
+    #[max_len(3)]
     pub argument_values: Vec<TestArgumentValue>,
     pub expected_outcome: ExpectedOutcome,
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum TestCaseType {
     Positive,
     NegativeBoundary,
@@ -164,20 +184,21 @@ pub enum TestCaseType {
     NegativeOverflow,
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct TestArgumentValue {
+    #[max_len(50)]
     pub argument_name: String,
     pub value_type: TestValueType,
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum TestValueType {
-    Valid { description: String },
-    Invalid { description: String, reason: String },
+    Valid { #[max_len(200)] description: String },
+    Invalid { #[max_len(200)] description: String, #[max_len(200)] reason: String },
 }
 
-#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum ExpectedOutcome {
-    Success { state_changes: Vec<String> },
-    Failure { error_code: Option<String>, error_message: String },
+    Success { #[max_len(5, 50)] state_changes: Vec<String> },
+    Failure { #[max_len(50)] error_code: Option<String>, #[max_len(100)] error_message: String },
 }

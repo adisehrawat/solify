@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use crate::types::test_metadata::TestMetadataEvent;
 
 #[event]
 pub struct UserProfileCreated {
@@ -42,11 +41,11 @@ pub struct TestMetadataGenerated {
     pub timestamp: i64,
 }
 
-#[event]
-pub struct CompleteTestMetadata {
-    pub authority: Pubkey,
-    pub program_id: Pubkey,
-    pub program_name: String,
-    pub test_metadata: TestMetadataEvent,
-    pub timestamp: i64,
-}
+// #[event]
+// pub struct CompleteTestMetadata {
+//     pub authority: Pubkey,
+//     pub program_id: Pubkey,
+//     pub program_name: String,
+//     pub test_metadata: TestMetadataEvent,
+//     pub timestamp: i64,
+// }

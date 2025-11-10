@@ -87,7 +87,7 @@ impl TestCaseGenerator {
             "bool" => Ok(ArgumentType::Bool),
             "string" => Ok(ArgumentType::String { max_length: None }),
             "publicKey" => Ok(ArgumentType::Pubkey),
-            _ => Ok(ArgumentType::Vec { inner_type: Box::new(ArgumentType::U8), max_length: None }),
+            _ => Ok(ArgumentType::VecType { inner_type_name: "u8".to_string(), max_length: None }),
         }
     }
 
