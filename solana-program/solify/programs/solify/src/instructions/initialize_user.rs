@@ -18,11 +18,10 @@ pub struct InitializeUser<'info> {
 }
 
 impl<'info> InitializeUser<'info> {
-    pub fn initialize_user(&mut self) -> Result<()> {
+    pub fn initialize_user(&mut self, bumps: &InitializeUserBumps) -> Result<()> {
         let clock = Clock::get()?;
 
-        let bump = self.user_config.bump;
-        self.user_config.initialize(self.authority.key(), bump, clock.unix_timestamp);
+        self.user_config.initialize(self.authority.key(), bumps.user_config, clock.unix_timestamp);
         emit!(UserProfileCreated {
             user: self.authority.key(),
             timestamp: clock.unix_timestamp,

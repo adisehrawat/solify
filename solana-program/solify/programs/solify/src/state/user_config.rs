@@ -7,7 +7,7 @@ use crate::state::program_history::ProgramTestHistory;
 pub struct UserConfig {
     pub authority: Pubkey,
     pub total_tests_generated: u64,
-    #[max_len(100)] 
+    #[max_len(50)] 
     pub programs_tested: Vec<ProgramTestHistory>,
     pub created_at: i64,
     pub last_generated_at: i64,

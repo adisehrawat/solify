@@ -202,7 +202,7 @@ impl DependencyAnalyzerImpl {
                 value: Some(format!("{} seeds", seeds.len())),
             });
             
-            msg!("Found PDA account '{}' with {} seeds", account_item.name, seeds.len());
+            // msg!("Found PDA account '{}' with {} seeds", account_item.name, seeds.len());
         }
 
         if account_item.is_mut == true {
@@ -230,8 +230,8 @@ impl DependencyAnalyzerImpl {
                     constraint_type: ConstraintType::Init,
                     value: None,
                 });
-                msg!("Inferred init constraint for '{}' in instruction '{}'", 
-                     account_item.name, instruction.name);
+                // msg!("Inferred init constraint for '{}' in instruction '{}'", 
+                //      account_item.name, instruction.name);
             }
         }
 

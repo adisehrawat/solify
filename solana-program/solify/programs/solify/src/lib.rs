@@ -20,7 +20,7 @@ pub mod solify {
     use super::*;
 
     pub fn initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
-        ctx.accounts.initialize_user()
+        ctx.accounts.initialize_user(&ctx.bumps)
     }
 
     pub fn generate_metadata(

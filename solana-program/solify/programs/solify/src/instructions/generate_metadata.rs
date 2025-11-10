@@ -4,7 +4,7 @@ use crate::{
     error::SolifyError, 
     types::IdlData, 
     analyzer::{hash_idl_data, DependencyAnalyzer},
-    events::MetadataGenerated
+    events::{ TestMetadataGenerated, CompleteTestMetadata}
 };
 
 #[derive(Accounts)]
@@ -30,7 +30,6 @@ impl<'info> GenerateMetadata<'info> {
     ) -> Result<()> {
         let clock = Clock::get()?;
         
-        // Validate execution order
         require!(
             !execution_order.is_empty(),
             SolifyError::InvalidInstructionOrder
@@ -48,17 +47,18 @@ impl<'info> GenerateMetadata<'info> {
             );
         }
 
-        msg!("Starting metadata generation for program: {}", program_name);
-        msg!("Execution order: {:?}", execution_order);
-
         let analyzer = DependencyAnalyzer::new();
         let test_metadata = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id.to_string())?;
 
-        msg!("Dependency analysis completed successfully");
-        msg!("Generated {} account dependencies", test_metadata.account_dependencies.len());
-        msg!("Generated {} PDA initializations", test_metadata.pda_init_sequence.len());
-        msg!("Generated {} setup requirements", test_metadata.setup_requirements.len());
-        msg!("Generated {} test cases", test_metadata.test_cases.len());
+        let positive_test_cases: u32 = test_metadata.test_cases
+            .iter()
+            .map(|tc| tc.positive_cases.len() as u32)
+            .sum();
+        
+        let negative_test_cases: u32 = test_metadata.test_cases
+            .iter()
+            .map(|tc| tc.negative_cases.len() as u32)
+            .sum();
 
         let idl_hash = hash_idl_data(&idl_data);
         
@@ -69,17 +69,27 @@ impl<'info> GenerateMetadata<'info> {
             clock.unix_timestamp
         );
 
-        emit!(MetadataGenerated {
+        emit!(CompleteTestMetadata {
             authority: self.authority.key(),
             program_id,
             program_name: program_name.clone(),
-            idl_hash,
-            instruction_count: idl_data.instructions.len() as u32,
-            test_case_count: test_metadata.test_cases.len() as u32,
+            test_metadata: test_metadata.to_event(),
             timestamp: clock.unix_timestamp,
         });
 
-        msg!("Metadata generation completed successfully for {}", program_name);
+        emit!(TestMetadataGenerated {
+            authority: self.authority.key(),
+            program_id,
+            program_name: program_name.clone(),
+            account_dependencies_count: test_metadata.account_dependencies.len() as u32,
+            pda_init_count: test_metadata.pda_init_sequence.len() as u32,
+            setup_requirements_count: test_metadata.setup_requirements.len() as u32,
+            total_test_cases: test_metadata.test_cases.len() as u32,
+            positive_test_cases,
+            negative_test_cases,
+            timestamp: clock.unix_timestamp,
+        });
+
         
         Ok(())
     }

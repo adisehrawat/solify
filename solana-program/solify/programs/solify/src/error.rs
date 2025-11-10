@@ -22,5 +22,7 @@ pub enum SolifyError {
     AccountConstraintParseFailed,
     #[msg("Dependency analysis failed")]
     DependencyAnalysisFailed,
+    #[msg("Serialization error")]
+    SerializationError,
 }
 
