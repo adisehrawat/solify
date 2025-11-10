@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[derive(Accounts)]
-#[instruction(idl_data: IdlData, execution_order: Vec<String>, program_id: Pubkey)]
+#[instruction(execution_order: Vec<String>, program_id: Pubkey)]
 pub struct GenerateMetadata<'info> {
     #[account(
         mut,
@@ -23,8 +23,9 @@ pub struct GenerateMetadata<'info> {
         bump
     )]
     pub test_metadata_config: Account<'info, TestMetadataConfig>,
-    #[account(mut, constraint = idl_storage.authority == authority.key() && idl_storage.program_id == program_id)]
-    pub idl_storage: Account<'info, IdlStorage>,
+    /// CHECK: We manually deserialize only the needed fields to avoid heap overflow
+    #[account(mut)]
+    pub idl_storage: UncheckedAccount<'info>,
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -38,30 +39,45 @@ impl<'info> GenerateMetadata<'info> {
         program_name: String,
     ) -> Result<()> {
         let clock = Clock::get()?;
+
+        let idl_storage_data = self.idl_storage.try_borrow_data()?;
+        
+        let discriminator = &idl_storage_data[0..8];
+        let expected_discriminator = IdlStorage::DISCRIMINATOR;
+        require!(
+            discriminator == expected_discriminator,
+            SolifyError::InvalidAccountData
+        );
+        
+        let mut data_slice = &idl_storage_data[8..];
+        let authority = Pubkey::deserialize(&mut data_slice)?;
+        let stored_program_id = Pubkey::deserialize(&mut data_slice)?;
         
         require!(
-            !execution_order.is_empty(),
-            SolifyError::InvalidInstructionOrder
+            authority == self.authority.key(),
+            SolifyError::Unauthorized
         );
-
-        // let idl_data = &self.idl_storage.idl_data;
-        // let idl_data = IdlData::try_from_slice(&self.idl_storage.idl_data.try_to_vec().unwrap())?;
+        require!(
+            stored_program_id == program_id,
+            SolifyError::InvalidProgramId
+        );
         
-        // let analyzer = DependencyAnalyzer::new();
-        // let test_metadata = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id.to_string())?;
-
+        let idl_data = IdlData::deserialize(&mut data_slice)?;
+        
+        let analyzer = DependencyAnalyzer::new();
+        let test_metadata = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id.to_string())?;
 
         self.user_config.update_after_generation(
             clock.unix_timestamp
         );
 
-        // self.test_metadata_config.initialize(
-        //     self.authority.key(), 
-        //     program_id, 
-        //     program_name, 
-        //     test_metadata, 
-        //     clock.unix_timestamp
-        // )?;
+        self.test_metadata_config.initialize(
+            self.authority.key(), 
+            program_id, 
+            program_name, 
+            test_metadata, 
+            clock.unix_timestamp
+        )?;
         
         Ok(())
     }

@@ -85,7 +85,8 @@ describe("solify", () => {
   const connection = provider.connection;
   
 
-  const user = Keypair.generate();
+//   const user = Keypair.generate();
+const user = provider.wallet;
   const userPubkey = user.publicKey;
 
   let userPda: PublicKey;
@@ -284,8 +285,8 @@ describe("solify", () => {
   console.log("userPubkey", userPubkey.toBase58());
 
   before(async () => {
-    const airdropSig = await connection.requestAirdrop(userPubkey, LAMPORTS_PER_SOL * 100);
-    await connection.confirmTransaction(airdropSig);
+    // const airdropSig = await connection.requestAirdrop(userPubkey, LAMPORTS_PER_SOL * 100);
+    // await connection.confirmTransaction(airdropSig);
 
     console.log("user balance", await connection.getBalance(userPubkey));
 
@@ -299,7 +300,7 @@ describe("solify", () => {
       userConfig: userPda,
       authority: userPubkey,
       systemProgram: SystemProgram.programId,
-    }).signers([user]).rpc();
+    }).rpc();
     console.log("tx", tx);
 
     const userConfig = await program.account.userConfig.fetch(userPda);
@@ -318,32 +319,28 @@ describe("solify", () => {
         authority: userPubkey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([user])
       .rpc();
     console.log("tx", tx);
 
     const idlStorage = await program.account.idlStorage.fetch(idlStoragePda);
     assert.equal(idlStorage.authority.toBase58(), userPubkey.toBase58());
     assert.equal(idlStorage.programId.toBase58(), programId.toBase58());
-    console.log("idlStorage", idlStorage.idlData.instructions);
+    console.log("idlStorage", JSON.stringify(idlStorage.idlData, null, 2));
   });
   it("should generate metadata", async () => {
     const tx = await program.methods
-      .generateMetadata( executionOrder, programId, programName)
+      .generateMetadata(executionOrder, programId, programName)
       .accountsStrict({
         userConfig: userPda,
-        authority: userPubkey,
         idlStorage: idlStoragePda,
         testMetadataConfig: testMetadataPda,
+        authority: userPubkey,
         systemProgram: SystemProgram.programId,
       })
-      .signers([user])
       .rpc();
     console.log("tx", tx);
 
-    const testMetadataConfig = await program.account.testMetadataConfig.fetch(testMetadataPda);
-
-    console.log("testMetadataConfig", testMetadataConfig);
-
+    const testMetadata = await program.account.testMetadataConfig.fetch(testMetadataPda);
+    console.log("testMetadata", JSON.stringify(testMetadata, null, 2));
   });  
 });

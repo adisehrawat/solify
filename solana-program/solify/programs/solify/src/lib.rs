@@ -31,7 +31,7 @@ pub mod solify {
         program_id: Pubkey, 
         program_name: String,
     ) -> Result<()> {
-        ctx.accounts.generate_metadata( execution_order, program_id, program_name)
+        ctx.accounts.generate_metadata(execution_order, program_id, program_name)
     }
 }
 

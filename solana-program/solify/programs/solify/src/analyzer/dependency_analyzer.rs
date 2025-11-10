@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anchor_lang::prelude::*;
 use crate::types::{IdlData, IdlInstruction, IdlAccountItem};
 use crate::error::SolifyError;
@@ -391,7 +393,7 @@ impl DependencyAnalyzerImpl {
 
     // kahn's algorithm
     pub fn topological_sort(&self, graph: &DependencyGraph) -> Result<Vec<String>> {
-        let mut in_degree = std::collections::HashMap::new();
+        let mut in_degree = HashMap::with_capacity(graph.nodes.len());
         
         // Initialize in-degree for all nodes
         for node in &graph.nodes {

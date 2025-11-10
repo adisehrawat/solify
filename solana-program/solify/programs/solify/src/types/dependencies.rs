@@ -3,9 +3,9 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct AccountDependency {
-    #[max_len(50)]
+    #[max_len(10)]
     pub account_name: String,
-    #[max_len(10, 50)]
+    #[max_len(5, 15)]
     pub depends_on: Vec<String>,
     pub is_pda: bool,
     pub is_signer: bool,
@@ -16,7 +16,7 @@ pub struct AccountDependency {
 
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct PdaInit {
-    #[max_len(50)]
+    #[max_len(10)]
     pub account_name: String,
     #[max_len(10)]
     pub seeds: Vec<SeedComponent>,
@@ -27,7 +27,7 @@ pub struct PdaInit {
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct SeedComponent {
     pub seed_type: SeedType,
-    #[max_len(50)]
+    #[max_len(10)]
     pub value: String,
 }
 
@@ -41,9 +41,9 @@ pub enum SeedType {
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct SetupRequirement {
     pub requirement_type: SetupType,
-    #[max_len(200)]
+    #[max_len(20)]
     pub description: String,
-    #[max_len(10, 50)]
+    #[max_len(5, 15)]
     pub dependencies: Vec<String>,
 }
 
@@ -58,7 +58,7 @@ pub enum SetupType {
 
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct InstructionTestCases {
-    #[max_len(50)]
+    #[max_len(10)]
     pub instruction_name: String,
     #[max_len(3)]
     pub arguments: Vec<ArgumentInfo>,
@@ -81,7 +81,7 @@ pub struct InstructionTestCases {
 
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct ArgumentInfo {
-    #[max_len(50)]
+    #[max_len(10)]
     pub name: String,
     pub arg_type: ArgumentType,
     #[max_len(5)]
@@ -114,8 +114,8 @@ pub enum ArgumentType {
     Bool,
     String { max_length: Option<u32> },
     Pubkey,
-    VecType { #[max_len(50)] inner_type_name: String, max_length: Option<u32> },
-    OptionType { #[max_len(50)] inner_type_name: String },
+    VecType { #[max_len(10)] inner_type_name: String, max_length: Option<u32> },
+    OptionType { #[max_len(10)] inner_type_name: String },
 }
 
 impl ArgumentType {
@@ -167,7 +167,7 @@ pub enum ArgumentConstraint {
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct TestCase {
     pub test_type: TestCaseType,
-    #[max_len(50)]
+    #[max_len(10)]
     pub description: String,
     #[max_len(3)]
     pub argument_values: Vec<TestArgumentValue>,
@@ -186,19 +186,19 @@ pub enum TestCaseType {
 
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub struct TestArgumentValue {
-    #[max_len(50)]
+    #[max_len(10)]
     pub argument_name: String,
     pub value_type: TestValueType,
 }
 
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum TestValueType {
-    Valid { #[max_len(200)] description: String },
-    Invalid { #[max_len(200)] description: String, #[max_len(200)] reason: String },
+    Valid { #[max_len(20)] description: String },
+    Invalid { #[max_len(20)] description: String, #[max_len(20)] reason: String },
 }
 
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize, Serialize, Deserialize, InitSpace)]
 pub enum ExpectedOutcome {
-    Success { #[max_len(5, 50)] state_changes: Vec<String> },
-    Failure { #[max_len(50)] error_code: Option<String>, #[max_len(100)] error_message: String },
+    Success { #[max_len(5, 15)] state_changes: Vec<String> },
+    Failure { #[max_len(5)] error_code: Option<String>, #[max_len(20)] error_message: String },
 }

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anchor_lang::prelude::*;
 use crate::analyzer::dependency_analyzer::{AccountRegistry, DependencyGraph};
 use crate::types::AccountDependency;
@@ -61,7 +63,7 @@ impl AccountOrder {
 
     fn get_sorted_instructions(&self, graph: &DependencyGraph) -> Result<Vec<String>> {
         // Simple topological sort implementation
-        let mut in_degree = std::collections::HashMap::new();
+        let mut in_degree = HashMap::with_capacity(graph.nodes.len());
         
         for node in &graph.nodes {
             in_degree.insert(node.name.clone(), 0);

@@ -24,5 +24,11 @@ pub enum SolifyError {
     DependencyAnalysisFailed,
     #[msg("Serialization error")]
     SerializationError,
+    #[msg("Invalid account data")]
+    InvalidAccountData,
+    #[msg("Unauthorized")]
+    Unauthorized,
+    #[msg("Invalid program ID")]
+    InvalidProgramId,
 }
 
