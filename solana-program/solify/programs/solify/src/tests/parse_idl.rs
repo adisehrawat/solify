@@ -1,33 +1,47 @@
-use anyhow::{Context, Result};
-use solify_common::{
-    IdlData, IdlInstruction, IdlAccountItem, IdlField, IdlAccount, IdlTypeDef, 
-    IdlPda, IdlSeed, IdlError, IdlConstant, IdlEvent, ParsedIdl
-};
-
-use solana_sdk::pubkey::Pubkey;
+use anchor_lang::prelude::*;
+use crate::types::{IdlData, IdlInstruction, IdlAccountItem, IdlField, IdlPda, IdlSeed, IdlAccount, IdlTypeDef, IdlError, IdlConstant, IdlEvent};
 use std::fs;
 use std::path::Path;
 
+// Import types from parsed_idl with aliases to avoid conflicts with Anchor types
+use crate::tests::parsed_idl::{
+    ParsedIdl,
+    Instruction as ParsedInstruction,
+    AccountInfo as ParsedAccountInfo,
+    ArgumentDef,
+    AccountDef,
+    TypeDef,
+    TypeKind,
+    IdlType,
+    DefinedType,
+    ErrorDef,
+    ConstantDef,
+    EventDef,
+    FieldDef,
+    PdaConfig,
+    PdaSeed,
+};
 
-pub fn parse_idl<P: AsRef<Path>>(idl_path: P) -> Result<IdlData> {
+pub fn parse_idl<P: AsRef<Path>>(idl_path: P) -> std::result::Result<IdlData, Box<dyn std::error::Error>> {
     let path = idl_path.as_ref();
     let idl_content = fs::read_to_string(path)
-        .with_context(|| format!("Failed to read IDL file at {:?}", path))?;
+        .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to read IDL file at {:?}: {}", path, e))) as Box<dyn std::error::Error>)?;
     let parsed_idl: ParsedIdl = serde_json::from_str(&idl_content)
-        .with_context(|| {
-            if let Err(e) = serde_json::from_str::<serde_json::Value>(&idl_content) {
-                format!("Invalid JSON: {}", e)
+        .map_err(|e| {
+            let msg = if let Err(json_e) = serde_json::from_str::<serde_json::Value>(&idl_content) {
+                format!("Invalid JSON: {}", json_e)
             } else {
-                "Failed to deserialize IDL JSON - structure mismatch".to_string()
-            }
+                format!("Failed to deserialize IDL JSON - structure mismatch: {}", e)
+            };
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, msg)) as Box<dyn std::error::Error>
         })?;
     
     convert_to_idl_data(parsed_idl)
 }
 
-fn convert_to_idl_data(parsed: ParsedIdl) -> Result<IdlData> {
+fn convert_to_idl_data(parsed: ParsedIdl) -> std::result::Result<IdlData, Box<dyn std::error::Error>> {
     if parsed.instructions.is_empty() {
-        anyhow::bail!("IDL must have at least one instruction");
+        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "IDL must have at least one instruction")) as Box<dyn std::error::Error>);
     }
     
     Ok(IdlData {
@@ -42,7 +56,7 @@ fn convert_to_idl_data(parsed: ParsedIdl) -> Result<IdlData> {
     })
 }
 
-fn convert_error(error: solify_common::ErrorDef) -> IdlError {
+fn convert_error(error: ErrorDef) -> IdlError {
     IdlError {
         code: error.code,
         name: error.name,
@@ -50,7 +64,7 @@ fn convert_error(error: solify_common::ErrorDef) -> IdlError {
     }
 }
 
-fn convert_constant(constant: solify_common::ConstantDef) -> IdlConstant {
+fn convert_constant(constant: ConstantDef) -> IdlConstant {
     IdlConstant {
         name: constant.name,
         constant_type: constant.constant_type,
@@ -58,7 +72,7 @@ fn convert_constant(constant: solify_common::ConstantDef) -> IdlConstant {
     }
 }
 
-fn convert_event(event: solify_common::EventDef) -> IdlEvent {
+fn convert_event(event: EventDef) -> IdlEvent {
     IdlEvent {
         name: event.name,
         discriminator: event.discriminator,
@@ -66,14 +80,14 @@ fn convert_event(event: solify_common::EventDef) -> IdlEvent {
     }
 }
 
-fn convert_field_def(field: solify_common::FieldDef) -> IdlField {
+fn convert_field_def(field: FieldDef) -> IdlField {
     IdlField {
         name: field.name,
         field_type: type_to_string(&field.field_type),
     }
 }
 
-fn convert_instruction(instr: solify_common::Instruction) -> IdlInstruction {
+fn convert_instruction(instr: ParsedInstruction) -> IdlInstruction {
     IdlInstruction {
         name: instr.name,
         accounts: instr.accounts.into_iter().map(convert_account_info).collect(),
@@ -82,7 +96,7 @@ fn convert_instruction(instr: solify_common::Instruction) -> IdlInstruction {
     }
 }
 
-fn convert_account_info(acc: solify_common::AccountInfo) -> IdlAccountItem {
+fn convert_account_info(acc: ParsedAccountInfo) -> IdlAccountItem {
     IdlAccountItem {
         name: acc.name,
         is_mut: acc.writable,
@@ -93,7 +107,7 @@ fn convert_account_info(acc: solify_common::AccountInfo) -> IdlAccountItem {
     }
 }
 
-fn convert_pda_config(pda: solify_common::PdaConfig) -> IdlPda {
+fn convert_pda_config(pda: PdaConfig) -> IdlPda {
     let program = pda.program
         .and_then(|prog| {
             if prog.kind == "const" {
@@ -102,7 +116,8 @@ fn convert_pda_config(pda: solify_common::PdaConfig) -> IdlPda {
                 None
             }
         })
-        .unwrap_or_default();
+        .map(|s| Some(s))
+        .unwrap_or(None);
     
     IdlPda {
         seeds: pda.seeds.into_iter().map(convert_pda_seed).collect(),
@@ -110,7 +125,7 @@ fn convert_pda_config(pda: solify_common::PdaConfig) -> IdlPda {
     }
 }
 
-fn convert_pda_seed(seed: solify_common::PdaSeed) -> IdlSeed {
+fn convert_pda_seed(seed: PdaSeed) -> IdlSeed {
     let value = if seed.kind == "const" {
         seed.value
             .as_ref()
@@ -177,30 +192,30 @@ fn bytes_to_hex(bytes: &[u8]) -> String {
     }
 }
 
-fn convert_argument(arg: solify_common::ArgumentDef) -> IdlField {
+fn convert_argument(arg: ArgumentDef) -> IdlField {
     IdlField {
         name: arg.name,
         field_type: type_to_string(&arg.arg_type),
     }
 }
 
-fn convert_account(acc: solify_common::AccountDef) -> IdlAccount {
+fn convert_account(acc: AccountDef) -> IdlAccount {
     IdlAccount {
         name: acc.name,
         fields: vec![],
     }
 }
 
-fn convert_type(type_def: solify_common::TypeDef) -> IdlTypeDef {
+fn convert_type(type_def: TypeDef) -> IdlTypeDef {
     match type_def.type_kind {
-        solify_common::TypeKind::Struct { fields } => {
+        TypeKind::Struct { fields } => {
             IdlTypeDef {
                 name: type_def.name,
                 kind: "struct".to_string(),
                 fields: fields.into_iter().map(|f| f.name).collect(),
             }
         }
-        solify_common::TypeKind::Enum { variants } => {
+        TypeKind::Enum { variants } => {
             IdlTypeDef {
                 name: type_def.name,
                 kind: "enum".to_string(),
@@ -210,23 +225,23 @@ fn convert_type(type_def: solify_common::TypeDef) -> IdlTypeDef {
     }
 }
 
-fn type_to_string(idl_type: &solify_common::IdlType) -> String {
+fn type_to_string(idl_type: &IdlType) -> String {
     match idl_type {
-        solify_common::IdlType::Simple(s) => s.clone(),
-        solify_common::IdlType::Vec { vec } => {
+        IdlType::Simple(s) => s.clone(),
+        IdlType::Vec { vec } => {
             format!("Vec<{}>", type_to_string(vec))
         }
-        solify_common::IdlType::Option { option } => {
+        IdlType::Option { option } => {
             format!("Option<{}>", type_to_string(option))
         }
-        solify_common::IdlType::Array { array } => {
+        IdlType::Array { array } => {
             let (inner, size) = array;
             format!("[{}; {}]", type_to_string(inner), size)
         }
-        solify_common::IdlType::Defined { defined } => {
+        IdlType::Defined { defined } => {
             match defined {
-                solify_common::DefinedType::Simple(name) => name.clone(),
-                solify_common::DefinedType::Generic { name, generics } => {
+                DefinedType::Simple(name) => name.clone(),
+                DefinedType::Generic { name, generics } => {
                     if generics.is_empty() {
                         name.clone()
                     } else {
@@ -240,38 +255,38 @@ fn type_to_string(idl_type: &solify_common::IdlType) -> String {
 }
 
 
-pub fn get_instruction_names<P: AsRef<Path>>(idl_path: P) -> Result<Vec<String>> {
-    let idl_data = parse_idl(idl_path)?;
-    Ok(idl_data.instructions.iter().map(|i| i.name.clone()).collect())
-}
+// pub fn get_instruction_names<P: AsRef<Path>>(idl_path: P) -> std::result::Result<Vec<String>, Box<dyn std::error::Error>> {
+//     let idl_data = parse_idl(idl_path)?;
+//     Ok(idl_data.instructions.iter().map(|i| i.name.clone()).collect())
+// }
 
-pub fn find_instruction<'a>(idl_data: &'a IdlData, name: &str) -> Option<&'a IdlInstruction> {
-    idl_data.instructions.iter().find(|i| i.name == name)
-}
+// pub fn find_instruction<'a>(idl_data: &'a IdlData, name: &str) -> Option<&'a IdlInstruction> {
+//     idl_data.instructions.iter().find(|i| i.name == name)
+// }
 
-pub fn get_pda_accounts(instruction: &IdlInstruction) -> Vec<String> {
-    instruction
-        .accounts
-        .iter()
-        .filter(|acc| acc.pda.is_some())
-        .map(|acc| acc.name.clone())
-        .collect()
-}
+// pub fn get_pda_accounts(instruction: &IdlInstruction) -> Vec<String> {
+//     instruction
+//         .accounts
+//         .iter()
+//         .filter(|acc| acc.pda.is_some())
+//         .map(|acc| acc.name.clone())
+//         .collect()
+// }
 
-pub fn get_signer_accounts(instruction: &IdlInstruction) -> Vec<String> {
-    instruction
-        .accounts
-        .iter()
-        .filter(|acc| acc.is_signer)
-        .map(|acc| acc.name.clone())
-        .collect()
-}
+// pub fn get_signer_accounts(instruction: &IdlInstruction) -> Vec<String> {
+//     instruction
+//         .accounts
+//         .iter()
+//         .filter(|acc| acc.is_signer)
+//         .map(|acc| acc.name.clone())
+//         .collect()
+// }
 
-pub fn get_writable_accounts(instruction: &IdlInstruction) -> Vec<String> {
-    instruction
-        .accounts
-        .iter()
-        .filter(|acc| acc.is_mut)
-        .map(|acc| acc.name.clone())
-        .collect()
-}
+// pub fn get_writable_accounts(instruction: &IdlInstruction) -> Vec<String> {
+//     instruction
+//         .accounts
+//         .iter()
+//         .filter(|acc| acc.is_mut)
+//         .map(|acc| acc.name.clone())
+//         .collect()
+// }

@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::types::test_metadata::TestMetadata;
 
 #[account]
-#[derive(InitSpace)]
+#[derive(InitSpace, Debug)]
 pub struct TestMetadataConfig {
     pub authority: Pubkey,
     pub program_id: Pubkey,

@@ -9,6 +9,9 @@ pub mod events;
 pub mod types;
 pub mod analyzer;
 
+#[cfg(test)]
+mod tests;
+
 pub use types::IdlData;
 
 declare_id!("67GqHdXxaRL3SYuRn29tzbRjMJCbNxaCAyaZpKNXu76b");
@@ -25,6 +28,11 @@ pub mod solify {
         ctx.accounts.store_idl(idl_data, program_id)
     }
 
+    pub fn update_idl_data(ctx: Context<UpdateIdl>, idl_data: IdlData, program_id: Pubkey) -> Result<()> {
+        let _ = program_id;
+        ctx.accounts.update_idl(idl_data)
+    }
+
     pub fn generate_metadata(
         ctx: Context<GenerateMetadata>, 
         execution_order: Vec<String>,
@@ -33,5 +41,6 @@ pub mod solify {
     ) -> Result<()> {
         ctx.accounts.generate_metadata(execution_order, program_id, program_name)
     }
+
 }
 

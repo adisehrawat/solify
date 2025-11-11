@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::types::IdlData;
 
 #[account]
+#[derive(InitSpace, Debug)]
 pub struct IdlStorage {
     pub authority: Pubkey,
     pub program_id: Pubkey,
@@ -21,6 +22,16 @@ impl IdlStorage {
     ) -> Result<()> {
         self.authority = authority;
         self.program_id = program_id;
+        self.idl_data = idl_data;
+        self.timestamp = timestamp;
+        Ok(())
+    }
+
+    pub fn update(
+        &mut self,
+        idl_data: IdlData,
+        timestamp: i64,
+    ) -> Result<()> {
         self.idl_data = idl_data;
         self.timestamp = timestamp;
         Ok(())

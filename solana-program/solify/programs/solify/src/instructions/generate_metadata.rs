@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use crate::{
-    analyzer::{DependencyAnalyzer}, 
+    analyzer::DependencyAnalyzer, 
     error::SolifyError, 
-    state::{TestMetadataConfig, user_config::UserConfig, IdlStorage},
+    state::{IdlStorage, ProgramTestHistory, TestMetadataConfig, user_config::UserConfig},
     types::IdlData,
 };
 
@@ -67,9 +67,14 @@ impl<'info> GenerateMetadata<'info> {
         let analyzer = DependencyAnalyzer::new();
         let test_metadata = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id.to_string())?;
 
-        self.user_config.update_after_generation(
-            clock.unix_timestamp
-        );
+        let program_history = ProgramTestHistory {
+            program_id: program_id.to_string(),
+            program_name: program_name.clone(),
+            test_count: test_metadata.test_cases.iter().map(|test_case| test_case.positive_cases.len() as u32 + test_case.negative_cases.len() as u32).sum(),
+            last_generated_at: clock.unix_timestamp
+        };
+
+        self.user_config.update_after_generation(program_history, clock.unix_timestamp);
 
         self.test_metadata_config.initialize(
             self.authority.key(), 

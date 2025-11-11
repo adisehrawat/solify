@@ -105,7 +105,7 @@ impl AccountOrder {
     fn get_account_dependencies(
         &self,
         account: &crate::analyzer::dependency_analyzer::AccountInfo,
-        registry: &AccountRegistry,
+        _registry: &AccountRegistry,
     ) -> Vec<String> {
         let mut dependencies = Vec::new();
 

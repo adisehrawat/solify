@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::analyzer::dependency_analyzer::{AccountRegistry, SeedInfo, SeedType};
+use crate::analyzer::dependency_analyzer::{AccountRegistry, SeedType};
 use crate::types::{PdaInit, SeedComponent, SeedType as OutputSeedType};
 use crate::error::SolifyError;
 

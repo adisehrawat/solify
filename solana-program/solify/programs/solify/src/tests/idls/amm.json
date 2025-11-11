@@ -1,0 +1,2088 @@
+{
+    "address": "27TUgHmywR4orA7SLpkG5iURuWZMhRJw7LaqGxUAQSeG",
+    "metadata": {
+      "name": "anchor_amm_q4_25",
+      "version": "0.1.0",
+      "spec": "0.1.0",
+      "description": "Created with Anchor"
+    },
+    "instructions": [
+      {
+        "name": "deposit",
+        "discriminator": [
+          242,
+          35,
+          198,
+          137,
+          82,
+          225,
+          242,
+          182
+        ],
+        "accounts": [
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "mint_x",
+            "relations": [
+              "config"
+            ]
+          },
+          {
+            "name": "mint_y",
+            "relations": [
+              "config"
+            ]
+          },
+          {
+            "name": "config",
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    99,
+                    111,
+                    110,
+                    102,
+                    105,
+                    103
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "config.seed",
+                  "account": "Config"
+                }
+              ]
+            }
+          },
+          {
+            "name": "mint_lp",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    108,
+                    112
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "config"
+                }
+              ]
+            }
+          },
+          {
+            "name": "vault_x",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "config"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_x"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "vault_y",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "config"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_y"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_x",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_x"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_y",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_y"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_lp",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_lp"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "token_program",
+            "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          },
+          {
+            "name": "associated_token_program",
+            "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          }
+        ],
+        "args": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_x",
+            "type": "u64"
+          },
+          {
+            "name": "max_y",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "initialize",
+        "discriminator": [
+          175,
+          175,
+          109,
+          31,
+          13,
+          152,
+          155,
+          237
+        ],
+        "accounts": [
+          {
+            "name": "initializer",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "mint_x"
+          },
+          {
+            "name": "mint_y"
+          },
+          {
+            "name": "mint_lp",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    108,
+                    112
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "config"
+                }
+              ]
+            }
+          },
+          {
+            "name": "vault_x",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "config"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_x"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "vault_y",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "config"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_y"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "config",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    99,
+                    111,
+                    110,
+                    102,
+                    105,
+                    103
+                  ]
+                },
+                {
+                  "kind": "arg",
+                  "path": "seed"
+                }
+              ]
+            }
+          },
+          {
+            "name": "token_program",
+            "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          },
+          {
+            "name": "associated_token_program",
+            "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          }
+        ],
+        "args": [
+          {
+            "name": "seed",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u16"
+          },
+          {
+            "name": "authority",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      },
+      {
+        "name": "swap",
+        "discriminator": [
+          248,
+          198,
+          158,
+          145,
+          225,
+          117,
+          135,
+          200
+        ],
+        "accounts": [
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "mint_x",
+            "relations": [
+              "config"
+            ]
+          },
+          {
+            "name": "mint_y",
+            "relations": [
+              "config"
+            ]
+          },
+          {
+            "name": "config",
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    99,
+                    111,
+                    110,
+                    102,
+                    105,
+                    103
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "config.seed",
+                  "account": "Config"
+                }
+              ]
+            }
+          },
+          {
+            "name": "mint_lp",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    108,
+                    112
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "config"
+                }
+              ]
+            }
+          },
+          {
+            "name": "vault_x",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "config"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_x"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "vault_y",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "config"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_y"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_x",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_x"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_y",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_y"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_lp",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_lp"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "token_program",
+            "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          },
+          {
+            "name": "associated_token_program",
+            "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          }
+        ],
+        "args": [
+          {
+            "name": "is_x",
+            "type": "bool"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "min_amount_out",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "withdraw",
+        "discriminator": [
+          183,
+          18,
+          70,
+          156,
+          148,
+          109,
+          161,
+          34
+        ],
+        "accounts": [
+          {
+            "name": "user",
+            "writable": true,
+            "signer": true
+          },
+          {
+            "name": "mint_x",
+            "relations": [
+              "config"
+            ]
+          },
+          {
+            "name": "mint_y",
+            "relations": [
+              "config"
+            ]
+          },
+          {
+            "name": "config",
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    99,
+                    111,
+                    110,
+                    102,
+                    105,
+                    103
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "config.seed",
+                  "account": "Config"
+                }
+              ]
+            }
+          },
+          {
+            "name": "mint_lp",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "const",
+                  "value": [
+                    108,
+                    112
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "config"
+                }
+              ]
+            }
+          },
+          {
+            "name": "vault_x",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "config"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_x"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "vault_y",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "config"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_y"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_x",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_x"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_y",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_y"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "user_lp",
+            "writable": true,
+            "pda": {
+              "seeds": [
+                {
+                  "kind": "account",
+                  "path": "user"
+                },
+                {
+                  "kind": "const",
+                  "value": [
+                    6,
+                    221,
+                    246,
+                    225,
+                    215,
+                    101,
+                    161,
+                    147,
+                    217,
+                    203,
+                    225,
+                    70,
+                    206,
+                    235,
+                    121,
+                    172,
+                    28,
+                    180,
+                    133,
+                    237,
+                    95,
+                    91,
+                    55,
+                    145,
+                    58,
+                    140,
+                    245,
+                    133,
+                    126,
+                    255,
+                    0,
+                    169
+                  ]
+                },
+                {
+                  "kind": "account",
+                  "path": "mint_lp"
+                }
+              ],
+              "program": {
+                "kind": "const",
+                "value": [
+                  140,
+                  151,
+                  37,
+                  143,
+                  78,
+                  36,
+                  137,
+                  241,
+                  187,
+                  61,
+                  16,
+                  41,
+                  20,
+                  142,
+                  13,
+                  131,
+                  11,
+                  90,
+                  19,
+                  153,
+                  218,
+                  255,
+                  16,
+                  132,
+                  4,
+                  142,
+                  123,
+                  216,
+                  219,
+                  233,
+                  248,
+                  89
+                ]
+              }
+            }
+          },
+          {
+            "name": "token_program",
+            "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          },
+          {
+            "name": "system_program",
+            "address": "11111111111111111111111111111111"
+          },
+          {
+            "name": "associated_token_program",
+            "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          }
+        ],
+        "args": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_x",
+            "type": "u64"
+          },
+          {
+            "name": "max_y",
+            "type": "u64"
+          }
+        ]
+      }
+    ],
+    "accounts": [
+      {
+        "name": "Config",
+        "discriminator": [
+          155,
+          12,
+          170,
+          224,
+          30,
+          250,
+          204,
+          130
+        ]
+      }
+    ],
+    "errors": [
+      {
+        "code": 6000,
+        "name": "DefaultError",
+        "msg": "DefaultError"
+      },
+      {
+        "code": 6001,
+        "name": "OfferExpired",
+        "msg": "Offer expired."
+      },
+      {
+        "code": 6002,
+        "name": "PoolLocked",
+        "msg": "This pool is locked."
+      },
+      {
+        "code": 6003,
+        "name": "SlippageExceeded",
+        "msg": "Slippage exceeded."
+      },
+      {
+        "code": 6004,
+        "name": "Overflow",
+        "msg": "Overflow detected."
+      },
+      {
+        "code": 6005,
+        "name": "Underflow",
+        "msg": "Underflow detected."
+      },
+      {
+        "code": 6006,
+        "name": "InvalidToken",
+        "msg": "Invalid token."
+      },
+      {
+        "code": 6007,
+        "name": "LiquidityLessThanMinimum",
+        "msg": "Actual liquidity is less than minimum."
+      },
+      {
+        "code": 6008,
+        "name": "NoLiquidityInPool",
+        "msg": "No liquidity in pool."
+      },
+      {
+        "code": 6009,
+        "name": "BumpError",
+        "msg": "Bump error."
+      },
+      {
+        "code": 6010,
+        "name": "CurveError",
+        "msg": "Curve error."
+      },
+      {
+        "code": 6011,
+        "name": "InvalidFee",
+        "msg": "Fee is greater than 100%. This is not a very good deal."
+      },
+      {
+        "code": 6012,
+        "name": "InvalidAuthority",
+        "msg": "Invalid update authority."
+      },
+      {
+        "code": 6013,
+        "name": "NoAuthoritySet",
+        "msg": "No update authority set."
+      },
+      {
+        "code": 6014,
+        "name": "InvalidAmount",
+        "msg": "Invalid amount."
+      },
+      {
+        "code": 6015,
+        "name": "InvalidPrecision",
+        "msg": "Invalid precision."
+      },
+      {
+        "code": 6016,
+        "name": "InsufficientBalance",
+        "msg": "Insufficient balance."
+      },
+      {
+        "code": 6017,
+        "name": "ZeroBalance",
+        "msg": "Zero balance."
+      }
+    ],
+    "types": [
+      {
+        "name": "Config",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "seed",
+              "type": "u64"
+            },
+            {
+              "name": "authority",
+              "type": {
+                "option": "pubkey"
+              }
+            },
+            {
+              "name": "mint_x",
+              "type": "pubkey"
+            },
+            {
+              "name": "mint_y",
+              "type": "pubkey"
+            },
+            {
+              "name": "fee",
+              "type": "u16"
+            },
+            {
+              "name": "locked",
+              "type": "bool"
+            },
+            {
+              "name": "config_bump",
+              "type": "u8"
+            },
+            {
+              "name": "lp_bump",
+              "type": "u8"
+            }
+          ]
+        }
+      }
+    ]
+  }

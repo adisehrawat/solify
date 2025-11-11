@@ -342,5 +342,8 @@ const user = provider.wallet;
 
     const testMetadata = await program.account.testMetadataConfig.fetch(testMetadataPda);
     console.log("testMetadata", JSON.stringify(testMetadata, null, 2));
+
+    const userConfig = await program.account.userConfig.fetch(userPda);
+    console.log("userConfig", JSON.stringify(userConfig, null, 2));
   });  
 });
