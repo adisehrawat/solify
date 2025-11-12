@@ -25,7 +25,7 @@ pub use parse_idl::*;
 
 pub mod parsed_idl;
 
-const PROGRAM_ID: Pubkey = pubkey!("67GqHdXxaRL3SYuRn29tzbRjMJCbNxaCAyaZpKNXu76b");
+const PROGRAM_ID: Pubkey = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
 
 
 
@@ -165,7 +165,7 @@ fn should_store_idl_data() {
     );
     svm.send_transaction(init_tx.clone()).unwrap();
 
-    let test_program_id = pubkey!("67GqHdXxaRL3SYuRn29tzbRjMJCbNxaCAyaZpKNXu76b");
+    let test_program_id = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
     let idl_storage_pda = get_idl_storage_pda(&test_program_id, &user_pubkey);
     let idl_data = create_test_idl_data();
     let anchor_test_program_id = AnchorPubkey::new_from_array(test_program_id.to_bytes());
@@ -245,7 +245,7 @@ fn should_generate_metadata() {
     );
     svm.send_transaction(init_tx.clone()).unwrap();
 
-    let test_program_id = pubkey!("67GqHdXxaRL3SYuRn29tzbRjMJCbNxaCAyaZpKNXu76b");
+    let test_program_id = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
     let idl_storage_pda = get_idl_storage_pda(&test_program_id, &user_pubkey);
     let idl_data = create_test_idl_data();
     let anchor_test_program_id = AnchorPubkey::new_from_array(test_program_id.to_bytes());
@@ -365,7 +365,7 @@ fn should_update_idl_and_generate_metadata() {
     );
     svm.send_transaction(init_tx.clone()).unwrap();
     
-    let test_program_id = pubkey!("67GqHdXxaRL3SYuRn29tzbRjMJCbNxaCAyaZpKNXu76b");
+    let test_program_id = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
     let idl_storage_pda = get_idl_storage_pda(&test_program_id, &user_pubkey);
     let initial_idl_data = create_test_idl_data();
     let anchor_test_program_id = AnchorPubkey::new_from_array(test_program_id.to_bytes());

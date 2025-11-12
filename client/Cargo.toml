@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# Solana & Anchor
-anchor-client = "0.32.1"
+# Solana
 solana-sdk = "3.0.0"
 solana-client = "3.0.10"
 
@@ -21,12 +20,11 @@ thiserror = "2.0.17"
 # Async
 tokio = { version = "1.35", features = ["full"] }
 
+# Logging
+log = "0.4"
+
 # Utilities
-bs58 = "0.5"
+chrono = "0.4"
 
 # Internal dependencies
 solify-common = { path = "../common" }
-
-[dev-dependencies]
-mockito = "1.2"
-

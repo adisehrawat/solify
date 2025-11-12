@@ -14,7 +14,7 @@ mod tests;
 
 pub use types::IdlData;
 
-declare_id!("67GqHdXxaRL3SYuRn29tzbRjMJCbNxaCAyaZpKNXu76b");
+declare_id!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
 
 #[program]
 pub mod solify {

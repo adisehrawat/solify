@@ -278,7 +278,7 @@ const user = provider.wallet;
     events: [],
   };
 
-  const programId = new PublicKey("67GqHdXxaRL3SYuRn29tzbRjMJCbNxaCAyaZpKNXu76b");
+  const programId = new PublicKey("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
   const programName = "journal";
   const executionOrder = ["create_journal_entry", "update_journal_entry", "delete_journal_entry"];
 

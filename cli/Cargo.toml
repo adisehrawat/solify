@@ -14,6 +14,10 @@ dialoguer = "0.12.0"
 console = "0.16.1"
 indicatif = "0.18.2"
 
+# TUI
+ratatui = "0.29.0"
+crossterm = "0.29.0"
+
 # Error handling
 anyhow = "1.0"
 thiserror = "2.0.17"
@@ -29,10 +33,19 @@ tokio = { version = "1.35", features = ["full"] }
 env_logger = "0.11"
 log = "0.4"
 
+# Solana
+solana-sdk = "3.0.0"
+solana-client = "3.0.10"
+solana-transaction-status = "3.0.0"
+
+# Utilities
+chrono = "0.4"
+bs58 = "0.5"
+shellexpand = "3.1"
+
 # Internal dependencies
 solify-common = { path = "../common" }
 solify-parser = { path = "../parser" }
-solify-analyzer = { path = "../analyzer" }
 solify-generator = { path = "../generator" }
 solify-client = { path = "../client" }
 

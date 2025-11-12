@@ -10,6 +10,8 @@ members = [
     "common",
 ]
 
+# Note: analyzer_onchain is part of the Solana program at solana-program/solify
+
 [workspace.dependencies]
 # Anchor & Solana
 anchor-lang = "0.32.1"
