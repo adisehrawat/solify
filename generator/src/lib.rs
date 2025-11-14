@@ -108,6 +108,7 @@ impl<'a> TestGenerator<'a> {
                     "instruction_name": test_case.instruction_name,
                     "positive_tests": positive_tests,
                     "negative_tests": negative_tests,
+                    "has_arguments": !test_case.arguments.is_empty(),
                     "arguments": test_case.arguments.iter().map(|arg| {
                         json!({
                             "name": arg.name,
@@ -128,6 +129,8 @@ impl<'a> TestGenerator<'a> {
                     "type": format!("{:?}", req.requirement_type),
                     "description": req.description,
                     "dependencies": req.dependencies,
+                    "is_keypair": matches!(req.requirement_type, solify_common::SetupType::CreateKeypair),
+                    "is_fund": matches!(req.requirement_type, solify_common::SetupType::FundAccount),
                 })
             })
             .collect();
@@ -162,15 +165,22 @@ impl<'a> TestGenerator<'a> {
             })
             .collect();
 
+        let total_positive: usize = test_metadata.test_cases.iter()
+            .map(|tc| tc.positive_cases.len())
+            .sum();
+        let total_negative: usize = test_metadata.test_cases.iter()
+            .map(|tc| tc.negative_cases.len())
+            .sum();
+
         let data = json!({
             "program_name": program_name,
             "program_name_upper": program_name.to_uppercase(),
             "program_name_camel": to_camel_case(program_name),
             "instructions": test_metadata.instruction_order,
             "instructions_count": test_metadata.instruction_order.len(),
-            "total_tests": test_metadata.test_cases.iter()
-                .map(|tc| tc.positive_cases.len() + tc.negative_cases.len())
-                .sum::<usize>(),
+            "total_tests": total_positive + total_negative,
+            "total_positive": total_positive,
+            "total_negative": total_negative,
             "pda_count": test_metadata.pda_init_sequence.len(),
             "setup_count": test_metadata.setup_requirements.len(),
             "version": idl_data.version,
@@ -196,12 +206,16 @@ impl<'a> TestGenerator<'a> {
             solify_common::ExpectedOutcome::Success { state_changes } => {
                 json!({
                     "type": "success",
+                    "is_success": true,
+                    "is_failure": false,
                     "state_changes": state_changes,
                 })
             }
             solify_common::ExpectedOutcome::Failure { error_code, error_message } => {
                 json!({
                     "type": "failure",
+                    "is_success": false,
+                    "is_failure": true,
                     "error_code": error_code,
                     "error_message": error_message,
                 })
@@ -234,6 +248,7 @@ impl<'a> TestGenerator<'a> {
             "description": test_case.description,
             "test_type": format!("{:?}", test_case.test_type),
             "arguments": arguments,
+            "has_arguments": !arguments.is_empty(),
             "expected": expected,
         })
     }

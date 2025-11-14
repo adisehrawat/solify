@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-/// Represents generated files
 #[derive(Debug, Clone)]
 pub struct GeneratedFiles {
     files: Vec<PathBuf>,
@@ -22,6 +21,10 @@ impl GeneratedFiles {
     pub fn count(&self) -> usize {
         self.files.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.files.is_empty()
+    }
 }
 
 impl Default for GeneratedFiles {
@@ -29,4 +32,3 @@ impl Default for GeneratedFiles {
         Self::new()
     }
 }
-
