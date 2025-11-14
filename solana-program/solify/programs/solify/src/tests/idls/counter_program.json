@@ -1,35 +1,32 @@
 {
-    "version": "0.1.0",
-    "name": "counter_program",
-    "instructions": [
-      {
-        "name": "initialize",
-        "accounts": [
-          { "name": "counter", "isMut": true, "isSigner": false },
-          { "name": "authority", "isMut": false, "isSigner": true },
-          { "name": "systemProgram", "isMut": false, "isSigner": false }
-        ],
-        "args": []
-      },
-      {
-        "name": "increment",
-        "accounts": [
-          { "name": "counter", "isMut": true, "isSigner": false }
-        ],
-        "args": []
+  "version": "0.1.0",
+  "name": "counter_program",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        { "name": "counter", "isMut": true, "isSigner": false },
+        { "name": "authority", "isMut": false, "isSigner": true },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    },
+    {
+      "name": "increment",
+      "accounts": [{ "name": "counter", "isMut": true, "isSigner": false }],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "counter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "count", "type": "u64" },
+          { "name": "authority", "type": "publicKey" }
+        ]
       }
-    ],
-    "accounts": [
-      {
-        "name": "counter",
-        "type": {
-          "kind": "struct",
-          "fields": [
-            { "name": "count", "type": "u64" },
-            { "name": "authority", "type": "publicKey" }
-          ]
-        }
-      }
-    ]
-  }
-  
+    }
+  ]
+}

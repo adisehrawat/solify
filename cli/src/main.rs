@@ -56,7 +56,6 @@ async fn main() -> Result<()> {
             gen_test::execute(idl,output, &cli.rpc_url).await?;
         }
     }
-
     Ok(())
 }
 

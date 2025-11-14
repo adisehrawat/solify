@@ -1,0 +1,45 @@
+{
+    "version": "0.1.0",
+    "name": "greeting_program",
+    "instructions": [
+        {
+            "name": "setMessage",
+            "accounts": [
+                {
+                    "name": "greeting",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "user",
+                    "isMut": false,
+                    "isSigner": true
+                }
+            ],
+            "args": [
+                {
+                    "name": "message",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "accounts": [
+        {
+            "name": "greeting",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "message",
+                        "type": "string"
+                    },
+                    {
+                        "name": "author",
+                        "type": "publicKey"
+                    }
+                ]
+            }
+        }
+    ]
+}

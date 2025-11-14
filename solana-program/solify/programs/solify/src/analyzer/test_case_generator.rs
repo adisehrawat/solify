@@ -153,7 +153,7 @@ fn create_basic_positive_case(
                 | ArgumentType::I128 => "500".to_string(),
                 ArgumentType::Bool => "true".to_string(),
                 ArgumentType::String { .. } => "\"test_value\"".to_string(),
-                ArgumentType::Pubkey => "authority.publicKey".to_string(),
+                ArgumentType::Pubkey => self.truncate_string("authority.publicKey", 20),
                 _ => "/* valid value */".to_string(),
             };
 
@@ -302,7 +302,7 @@ fn create_constraint_violation_case(
                     argument_name: argument.name.clone(),
                     value_type: TestValueType::Invalid {
                         description: (value - 1).to_string(),
-                        reason: format!("Below minimum value of {}", value),
+                        reason: self.truncate_string(&format!("Below minimum value of {}", value), 20),
                     },
                 }],
                 expected_outcome: ExpectedOutcome::Failure {
@@ -318,7 +318,7 @@ fn create_constraint_violation_case(
                     argument_name: argument.name.clone(),
                     value_type: TestValueType::Invalid {
                         description: (value + 1).to_string(),
-                        reason: format!("Above maximum value of {}", value),
+                        reason: self.truncate_string(&format!("Above maximum value of {}", value), 20),
                     },
                 }],
                 expected_outcome: ExpectedOutcome::Failure {
@@ -334,7 +334,7 @@ fn create_constraint_violation_case(
                     argument_name: argument.name.clone(),
                     value_type: TestValueType::Invalid {
                         description: "0".to_string(),
-                        reason: "Must be non-zero".to_string(),
+                        reason: self.truncate_string("Must be non-zero", 20),
                     },
                 }],
                 expected_outcome: ExpectedOutcome::Failure {
@@ -363,7 +363,7 @@ fn generate_numeric_negative_cases(
             argument_name: argument.name.clone(),
             value_type: TestValueType::Invalid {
                 description: "u64::MAX".to_string(),
-                reason: "Potential arithmetic overflow".to_string(),
+                reason: self.truncate_string("Potential arithmetic overflow", 20),
             },
         }],
         expected_outcome: ExpectedOutcome::Failure {
@@ -380,7 +380,7 @@ fn generate_numeric_negative_cases(
             argument_name: argument.name.clone(),
             value_type: TestValueType::Invalid {
                 description: "-1".to_string(),
-                reason: "Unsigned type cannot be negative".to_string(),
+                reason: self.truncate_string("Unsigned type cannot be negative", 20),
             },
         }],
         expected_outcome: ExpectedOutcome::Failure {
@@ -407,7 +407,7 @@ fn generate_string_negative_cases(
             argument_name: argument.name.clone(),
             value_type: TestValueType::Invalid {
                 description: "\"\"".to_string(),
-                reason: "String cannot be empty".to_string(),
+                reason: self.truncate_string("String cannot be empty", 20),
             },
         }],
         expected_outcome: ExpectedOutcome::Failure {
@@ -423,8 +423,8 @@ fn generate_string_negative_cases(
         argument_values: vec![TestArgumentValue {
             argument_name: argument.name.clone(),
             value_type: TestValueType::Invalid {
-                description: "\"a\".repeat(1000)".to_string(),
-                reason: "Exceeds maximum length".to_string(),
+                description: self.truncate_string("\"a\".repeat(1000)", 20),
+                reason: self.truncate_string("Exceeds maximum length", 20),
             },
         }],
         expected_outcome: ExpectedOutcome::Failure {
@@ -450,8 +450,8 @@ fn generate_pubkey_negative_cases(
         argument_values: vec![TestArgumentValue {
             argument_name: argument.name.clone(),
             value_type: TestValueType::Invalid {
-                description: "Keypair.generate().publicKey".to_string(),
-                reason: "Account not initialized".to_string(),
+                description: self.truncate_string("Keypair.generate().publicKey", 20),
+                reason: self.truncate_string("Account not initialized", 20),
             },
         }],
         expected_outcome: ExpectedOutcome::Failure {
@@ -462,6 +462,15 @@ fn generate_pubkey_negative_cases(
 
     Ok(cases)
 }
+
+    /// Truncate string to max length for Anchor's max_len constraint
+    fn truncate_string(&self, s: &str, max_len: usize) -> String {
+        if s.len() <= max_len {
+            s.to_string()
+        } else {
+            s.chars().take(max_len).collect()
+        }
+    }
 
     fn create_combined_negative_case(
         &self,
@@ -474,7 +483,7 @@ fn generate_pubkey_negative_cases(
             argument_name: arg.name.clone(),
             value_type: TestValueType::Invalid {
                 description: "invalid".to_string(),
-                reason: "Multiple validation failures".to_string(),
+                reason: self.truncate_string("Multiple validation failures", 20),
             },
         })
         .collect();

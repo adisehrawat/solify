@@ -167,9 +167,18 @@ impl SolifyClient {
             .context("Failed to fetch test metadata account")?;
 
         if let Some(account) = response.value {
-            let decoded =
-                accounts::test_metadata_config::TestMetadataConfig::from_bytes(&account.data)
-                    .context("Failed to decode TestMetadataConfig account data")?;
+            
+            let decoded = accounts::test_metadata_config::TestMetadataConfig::from_bytes(&account.data)
+            .with_context(|| {
+                format!(
+                    "Failed to decode TestMetadataConfig due to serialization format mismatch. \
+                    On-chain uses Anchor's fixed-size strings (max_len), client uses Borsh variable-size. \
+                    This happens because the generated client code doesn't respect Anchor's max_len format. \
+                    Account data length: {} bytes. \
+                    SOLUTION: Regenerate the client code with proper Anchor support, or remove max_len from on-chain types.",
+                    account.data.len()
+                )
+            })?;
             let test_metadata = convert_test_metadata_back(&decoded.test_metadata)?;
 
             Ok(Some(TestMetadataAccount {

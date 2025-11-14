@@ -28,6 +28,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 borsh = "1.5.7"
 
+# Anchor
+anchor-lang = { version = "0.32.1", optional = false }
 # Error handling
 anyhow = "1.0"
 thiserror = "2.0.17"
