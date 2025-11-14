@@ -42,6 +42,17 @@ pub enum SolifyError {
 
     #[error("Dependency analysis failed: {0}")]
     DependencyAnalysisFailed(String),
+
+    #[error("Invalid setup requirement")]
+    InvalidSetupRequirement,
+
+    #[error("Invalid PDA initialization")]
+    InvalidPdaInitialization,
+
+    #[error("Invalid test case")]
+    InvalidTestCase,
+    
+    
 }
 
 pub type Result<T> = std::result::Result<T, SolifyError>;

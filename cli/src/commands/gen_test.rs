@@ -13,7 +13,7 @@ use std::str::FromStr;
 use std::{ fs, path::PathBuf };
 use std::time::Duration;
 use solana_commitment_config::CommitmentConfig;
-use solify_generator::TestGenerator;
+use solify_generator::generate_with_tera;
 
 use crate::tui::{
     AppEvent,
@@ -38,7 +38,6 @@ enum AppState {
 
 pub async fn execute(idl_path: PathBuf, output: PathBuf, rpc_url: &str) -> Result<()> {
     info!("Starting test generation process...");
-
 
     let idl_data = parse_idl(&idl_path).with_context(||
         format!("Failed to parse IDL file: {:?}", idl_path)
@@ -181,9 +180,9 @@ async fn run_interactive_test_generation(
                     if let Some(ref metadata) = test_metadata {
                         let mut info = vec![
                             "✓ On-chain processing complete!".to_string(),
-                            "✓ Test metadata fetched from PDA".to_string(),
+                            "✓ Test metadata fetched from PDA".to_string()
                         ];
-                        
+
                         if test_files_generated {
                             let final_output = if let Some(anchor_dir) = anchor_test_dir {
                                 anchor_dir.display().to_string()
@@ -195,31 +194,36 @@ async fn run_interactive_test_generation(
                         } else {
                             info.push("⏳ Generating test files...".to_string());
                         }
-                        
-                        info.extend(vec![
-                            "".to_string(),
-                            format!(
-                                "Account dependencies: {}",
-                                metadata.account_dependencies.len()
-                            ),
-                            format!("PDAs detected: {}", metadata.pda_init_sequence.len()),
-                            format!("Setup requirements: {}", metadata.setup_requirements.len()),
-                            format!("Total Instructions: {}", metadata.instruction_order.len()),
-                            format!(
-                                "Positive cases: {}",
-                                metadata.test_cases
-                                    .iter()
-                                    .map(|tc| tc.positive_cases.len())
-                                    .sum::<usize>()
-                            ),
-                            format!(
-                                "Negative cases: {}",
-                                metadata.test_cases
-                                    .iter()
-                                    .map(|tc| tc.negative_cases.len())
-                                    .sum::<usize>()
-                            )
-                        ]);
+
+                        info.extend(
+                            vec![
+                                "".to_string(),
+                                format!(
+                                    "Account dependencies: {}",
+                                    metadata.account_dependencies.len()
+                                ),
+                                format!("PDAs detected: {}", metadata.pda_init_sequence.len()),
+                                format!(
+                                    "Setup requirements: {}",
+                                    metadata.setup_requirements.len()
+                                ),
+                                format!("Total Instructions: {}", metadata.instruction_order.len()),
+                                format!(
+                                    "Positive cases: {}",
+                                    metadata.test_cases
+                                        .iter()
+                                        .map(|tc| tc.positive_cases.len())
+                                        .sum::<usize>()
+                                ),
+                                format!(
+                                    "Negative cases: {}",
+                                    metadata.test_cases
+                                        .iter()
+                                        .map(|tc| tc.negative_cases.len())
+                                        .sum::<usize>()
+                                )
+                            ]
+                        );
                         render_info_box(f, chunks[2], "Results", info);
                     }
                 }
@@ -250,61 +254,49 @@ async fn run_interactive_test_generation(
                 if handle.is_finished() {
                     // Take ownership and await
                     if let Some(handle) = onchain_handle.take() {
-                        match handle.await {
-                            Ok(Ok(metadata)) => {
-                                progress = 1.0;
-                                test_metadata = Some(metadata.clone());
-                                state = AppState::Complete;
-                                
-                                // Generate test files automatically when on-chain processing completes
-                                if !test_files_generated {
-                                    test_files_generated = true;
-                                    
-                                    // Determine output directory
-                                    let final_output = if let Some(anchor_dir) = anchor_test_dir {
-                                        anchor_dir.clone()
-                                    } else {
-                                        output.clone()
-                                    };
-                                    
-                                    // Ensure output directory exists
-                                    if let Err(e) = fs::create_dir_all(&final_output) {
-                                        error_msg = Some(format!("Failed to create output directory: {:?}: {}", final_output, e));
-                                        state = AppState::Error(error_msg.as_ref().unwrap().clone());
-                                    } else {
-                                        // Generate test files
-                                        match TestGenerator::new() {
-                                            Ok(test_generator) => {
-                                                match test_generator.generate_tests(&idl_data, &metadata, &final_output, program) {
-                                                    Ok(generated_files) => {
-                                                        info!("Test files generated successfully!");
-                                                        info!("Output directory: {}", final_output.display());
-                                                        info!("Generated {} file(s)", generated_files.count());
-                                                        for file in generated_files.files() {
-                                                            info!("  - {}", file.display());
-                                                        }
-                                                    }
-                                                    Err(e) => {
-                                                        error_msg = Some(format!("Failed to generate test files: {}", e));
-                                                        state = AppState::Error(error_msg.as_ref().unwrap().clone());
-                                                    }
-                                                }
-                                            }
-                                            Err(e) => {
-                                                error_msg = Some(format!("Failed to create test generator: {}", e));
-                                                state = AppState::Error(error_msg.as_ref().unwrap().clone());
-                                            }
+                        if let Ok(Ok(metadata)) = handle.await {
+                            progress = 1.0;
+                            test_metadata = Some(metadata.clone());
+                            state = AppState::Complete;
+
+                            // Generate test files automatically when on-chain processing completes
+                            if !test_files_generated {
+                                test_files_generated = true;
+
+                                // Determine output directory
+                                let final_output = if let Some(anchor_dir) = anchor_test_dir {
+                                    anchor_dir.clone()
+                                } else {
+                                    output.clone()
+                                };
+
+                                // Ensure output directory exists
+                                if let Err(e) = fs::create_dir_all(&final_output) {
+                                    error_msg = Some(
+                                        format!(
+                                            "Failed to create output directory: {:?}: {}",
+                                            final_output,
+                                            e
+                                        )
+                                    );
+                                    state = AppState::Error(error_msg.as_ref().unwrap().clone());
+                                } else {
+                                    // Generate test files
+                                    match generate_with_tera(&metadata, &idl_data, &final_output) {
+                                        Ok(_) => {
+                                            info!("Test files generated successfully!");
+                                            info!("Output directory: {}", final_output.display());
+                                        }
+                                        Err(e) => {
+                                            error_msg = Some(
+                                                format!("Failed to generate test files: {}", e)
+                                            );
+                                            state = AppState::Error(
+                                                error_msg.as_ref().unwrap().clone()
+                                            );
                                         }
                                     }
                                 }
-                            }
-                            Ok(Err(e)) => {
-                                error_msg = Some(e.to_string());
-                                state = AppState::Error(e.to_string());
-                            }
-                            Err(e) => {
-                                error_msg = Some(e.to_string());
-                                state = AppState::Error(e.to_string());
                             }
                         }
                     }
@@ -344,7 +336,7 @@ async fn run_interactive_test_generation(
                 println!("\n📁 Tests saved to: {}", output.display());
                 output
             };
-            
+
             // Verify files were created
             let idl_name = sanitize_idl_name(&idl_data.name);
             let test_file = final_output.join(format!("{}.test.ts", idl_name));
@@ -363,30 +355,22 @@ async fn run_interactive_test_generation(
             };
 
             // Ensure output directory exists
-            fs::create_dir_all(&final_output)
+            fs
+                ::create_dir_all(&final_output)
                 .with_context(|| format!("Failed to create output directory: {:?}", final_output))?;
 
             println!("\n📝 Generating TypeScript test files...");
             println!("   Output directory: {}", final_output.display());
             println!("   IDL name: {}", idl_data.name);
-            
-            let test_generator = TestGenerator::new()
-                .context("Failed to create test generator")?;
-            
-            let generated_files = test_generator.generate_tests(&idl_data, &metadata, &final_output, program)
-                .with_context(|| format!("Failed to generate test files in: {:?}", final_output))?;
-            
-            println!("  ✅ Test files generated successfully!");
-            println!("   Generated {} file(s)", generated_files.count());
-            for file in generated_files.files() {
-                println!("   - {}", file.display());
-            }
-            println!("   Run `anchor test` to execute the tests");
+
+            generate_with_tera(&metadata, &idl_data, &final_output).with_context(||
+                format!("Failed to generate test files in: {:?}", final_output)
+            )?;
         }
-    } else if let Some(err) = error_msg {
+    }
+
+    if let Some(err) = error_msg {
         anyhow::bail!("On-chain processing failed: {}", err);
-    } else {
-        anyhow::bail!("No test metadata available and no error message");
     }
 
     Ok(())
@@ -419,6 +403,12 @@ async fn process_onchain(
         let update_idl_sig = client.update_idl_data(&wallet_keypair, program_id, &idl_data)?;
         println!("  ✅ IDL data updated on-chain");
         println!(" Signature for updating IDL data: {}", update_idl_sig);
+        let idl_storage = client.fetch_idl_storage(user_pubkey, program_id)?;
+        if idl_storage.is_some() {
+            println!("  ✅ IDL data updated on-chain");
+        } else {
+            return Err(anyhow::anyhow!("Failed to fetch IDL data after operation"));
+        }
         println!(" Step 4/4: checking if test metadata exists...");
         let existing_metadata = client.fetch_test_metadata(user_pubkey, program_id, paraphrase)?;
 
@@ -495,8 +485,11 @@ fn detect_anchor_test_directory(idl_path: &PathBuf) -> Result<Option<PathBuf>> {
                     let test_dir = project_root.join("tests");
                     // Create the tests directory if it doesn't exist
                     if !test_dir.exists() {
-                        fs::create_dir_all(&test_dir)
-                            .with_context(|| format!("Failed to create tests directory: {:?}", test_dir))?;
+                        fs
+                            ::create_dir_all(&test_dir)
+                            .with_context(||
+                                format!("Failed to create tests directory: {:?}", test_dir)
+                            )?;
                         info!("Created Anchor tests directory: {:?}", test_dir);
                     } else {
                         info!("Detected Anchor tests directory: {:?}", test_dir);
@@ -513,9 +506,11 @@ fn detect_anchor_test_directory(idl_path: &PathBuf) -> Result<Option<PathBuf>> {
 /// Sanitize IDL name for use in filenames
 fn sanitize_idl_name(name: &str) -> String {
     name.chars()
-        .map(|c| match c {
-            'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '-' => c,
-            _ => '_',
+        .map(|c| {
+            match c {
+                'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '-' => c,
+                _ => '_',
+            }
         })
         .collect()
 }

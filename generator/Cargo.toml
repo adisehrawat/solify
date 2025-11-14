@@ -20,6 +20,7 @@ chrono = "0.4"
 
 # Internal dependencies
 solify-common = { path = "../common" }
+tera = "1.0.0"
 
 [dev-dependencies]
 tempfile = "3.8"

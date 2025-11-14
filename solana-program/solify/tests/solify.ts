@@ -85,6 +85,8 @@ describe("solify", () => {
   
 
 const user = provider.wallet;
+const user2 = Keypair.generate();
+const user2Pubkey = user2.publicKey;
   const userPubkey = user.publicKey;
 
   let userPda: PublicKey;
@@ -284,8 +286,9 @@ const user = provider.wallet;
   console.log("userPubkey", userPubkey.toBase58());
 
   before(async () => {
-
+    await connection.requestAirdrop(userPubkey, 10 * LAMPORTS_PER_SOL);
     console.log("user balance", await connection.getBalance(userPubkey));
+    
 
     [userPda] = PublicKey.findProgramAddressSync([Buffer.from("user_config"), userPubkey.toBuffer()], program.programId);
     [testMetadataPda] = PublicKey.findProgramAddressSync([Buffer.from("tests_metadata"), programId.toBuffer(), userPubkey.toBuffer(), Buffer.from(paraphrase)], program.programId);

@@ -1,7 +1,6 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
-use solana_sdk::pubkey::Pubkey;
 
 
 #[derive(Debug, Clone, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -335,7 +334,7 @@ pub struct SetupRequirement {
     pub dependencies: Vec<String>,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, PartialEq, Eq)]
 pub enum SetupType {
     CreateKeypair,
     FundAccount,
@@ -344,7 +343,7 @@ pub enum SetupType {
     CreateAta,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
 pub struct InstructionTestCases {
     pub instruction_name: String,
     pub arguments: Vec<ArgumentInfo>,
@@ -352,7 +351,7 @@ pub struct InstructionTestCases {
     pub negative_cases: Vec<TestCase>,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
 pub struct ArgumentInfo {
     pub name: String,
     pub arg_type: ArgumentType,
@@ -360,7 +359,7 @@ pub struct ArgumentInfo {
     pub is_optional: bool,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
 pub enum ArgumentType {
     U8,
     U16,
@@ -387,7 +386,7 @@ pub enum ArgumentType {
     },
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
 pub enum ArgumentConstraint {
     Min { value: i64 },
     Max { value: i64 },
@@ -398,7 +397,7 @@ pub enum ArgumentConstraint {
     Custom { description: String },
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
 pub struct TestCase {
     pub test_type: TestCaseType,
     pub description: String,
@@ -406,7 +405,7 @@ pub struct TestCase {
     pub expected_outcome: ExpectedOutcome,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
 pub enum TestCaseType {
     Positive,
     NegativeBoundary,
@@ -416,19 +415,21 @@ pub enum TestCaseType {
     NegativeOverflow,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
 pub struct TestArgumentValue {
     pub argument_name: String,
     pub value_type: TestValueType,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "variant")]
 pub enum TestValueType {
     Valid { description: String },
     Invalid { description: String, reason: String },
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "variant")]
 pub enum ExpectedOutcome {
     Success { state_changes: Vec<String> },
     Failure {
@@ -437,25 +438,6 @@ pub enum ExpectedOutcome {
     },
 }
 
-
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
-pub struct UserConfig {
-    pub authority: Pubkey,
-    pub total_tests_generated: u64,
-    pub programs_tested: Vec<ProgramTestHistory>,
-    pub created_at: i64,
-    pub last_generated_at: i64,
-    pub bump: u8,
-}
-
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
-pub struct ProgramTestHistory {
-    pub program_id: Pubkey,
-    pub program_name: String,
-    pub test_count: u32,
-    pub last_generated_at: i64,
-    pub idl_hash: [u8; 32],
-}
 
 
 

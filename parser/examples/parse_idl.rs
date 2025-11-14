@@ -3,13 +3,13 @@
 
 use solify_parser::{parse_idl, get_pda_accounts, get_signer_accounts, get_writable_accounts};
 
-// use solify_analyzer_onchain::DependencyAnalyzer;
+use solify_analyzer::DependencyAnalyzer;
 
 
 fn main() {
     println!("=== Solify IDL Parser ===\n");
     
-    let idl_path = concat!(env!("CARGO_MANIFEST_DIR"), "/idls/journal.json");
+    let idl_path = concat!(env!("CARGO_MANIFEST_DIR"), "/idls/counter_program.json");
     
     println!(" Reading IDL from: {}", idl_path);
     
@@ -139,19 +139,20 @@ fn main() {
         }
     }
     
-    // println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━-------------------");
-    // println!("On chain analysis:");
-    // println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━--------------------");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━-------------------");
+    println!("On chain analysis:");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━--------------------");
 
-    // let execution_order: [String; 3] = [
-    //     String::from("create_journal_entry"), 
-    //     String::from("update_journal_entry"), 
-    //     String::from("delete_journal_entry")
-    // ];
-    // let program_id: String = String::from("94L2mJxVu6ZMmHaGsCHRQ65Kk2mea6aTnwWjSdfSsmBC");
+    let execution_order: [String; 4] = [
+        String::from("initialize"),
+        String::from("increment"), 
+        String::from("decrement"), 
+        String::from("set")
+    ];
+    let program_id: String = String::from("FBiayQZWoTdQFUvPk1WJZUJqFLh9eLke89xGaFHCpAfN");
 
-    // let analyzer = DependencyAnalyzer::new();
-    // let tests = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id).unwrap();
-    // println!("Test metadata: {:#?}", tests);
+    let analyzer = DependencyAnalyzer::new();
+    let tests = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id).unwrap();
+    println!("Test metadata: {:#?}", tests);
 }
 

@@ -1,430 +1,527 @@
-use anyhow::{Context, Result};
-use handlebars::Handlebars;
-use serde_json::json;
-use solify_common::{TestMetadata, TestCase, IdlData};
-use std::fs;
+use anyhow::{ Context, Result };
+use std::collections::HashMap;
+use std::fs::{ create_dir_all, File };
+use std::io::Write;
 use std::path::Path;
 
-pub mod template;
-pub mod writer;
+use solify_common::{
+    IdlData,
+    SeedComponent,
+    SeedType,
+    SetupType,
+    TestMetadata,
+    TestValueType,
+};
+use solify_common::errors::SolifyError;
+use tera::{ Tera, Context as TeraContext };
+use serde::{Serialize, Deserialize};
 
-pub use template::*;
-pub use writer::*;
-
-/// Generator for TypeScript test files
-pub struct TestGenerator<'a> {
-    handlebars: Handlebars<'a>,
+#[derive(Serialize, Deserialize)]
+struct AccountInfo {
+    original_name: String,
+    camel_name: String,
 }
 
-impl<'a> TestGenerator<'a> {
-    pub fn new() -> Result<Self> {
-        let mut handlebars = Handlebars::new();
-        
-        handlebars.register_template_string("main_test", template::MAIN_TEST_TEMPLATE)?;
-        
-        Ok(Self { handlebars })
-    }
+pub fn generate_with_tera(
+    meta: &TestMetadata,
+    idl: &IdlData,
+    out_dir: impl AsRef<Path>
+) -> Result<()> {
+    let out_dir = out_dir.as_ref();
+    create_dir_all(out_dir).with_context(|| format!("creating output dir {:?}", out_dir))?;
+    let tests_dir = out_dir.join("tests");
+    create_dir_all(&tests_dir).with_context(|| format!("creating tests dir {:?}", tests_dir))?;
 
-    pub fn generate_tests(
-        &self,
-        idl_data: &IdlData,
-        test_metadata: &TestMetadata,
-        output_dir: &Path,
-        _program_name: &str,
-    ) -> Result<GeneratedFiles> {
-        let mut generated_files = GeneratedFiles::new();
+    let mut tera = Tera::default();
+    tera
+        .add_raw_template("aggregated_tests.tera", AGGREGATED_TEMPLATE)
+        .context("add aggregated template")?;
 
-        // Ensure output directory exists
-        fs::create_dir_all(output_dir)
-            .with_context(|| format!("Failed to create output directory: {:?}", output_dir))?;
+    let mut ctx = TeraContext::new();
 
-        // Use IDL name instead of program ID for valid TypeScript identifiers
-        // Sanitize the name to ensure it's a valid filename
-        let idl_name = Self::sanitize_filename(&idl_data.name);
-        
-        if idl_name.is_empty() {
-            anyhow::bail!("IDL name is empty or contains only invalid characters");
+    let program_name = &idl.name;
+    let program_name_pascal = cut_program_name(program_name);
+    let program_capitalized = capitalize_first_letter(&program_name_pascal);
+    let program_name_camel = camel_case(program_name);
+    let program_name_pascal_case = to_pascal_case(program_name);
+    ctx.insert("program_name", program_name);
+    ctx.insert("program_name_pascal", &program_name_pascal);
+    ctx.insert("program_capitalized", &program_capitalized);
+    ctx.insert("program_name_camel", &program_name_camel);
+    ctx.insert("program_name_pascal_case", &program_name_pascal_case);
+    // 1. setup test environment -------
+    // 2. pda initialization
+    // 3. writing tests
+
+    // setup requirements
+    let setup_requirements = meta.setup_requirements.clone();
+    let mut map = HashMap::new();
+    let mut index = 0;
+
+    for setup_requirement in setup_requirements.iter().cloned() {
+        index += 1;
+
+        match setup_requirement.requirement_type {
+            SetupType::CreateKeypair => {
+                map.insert(index, "Keypair.generate()");
+            }
+            SetupType::FundAccount => {
+                map.insert(index, "FundAccount");
+            }
+            SetupType::InitializePda => {
+                map.insert(index, "PublicKey");
+            }
+            _ => {
+                return Err(SolifyError::InvalidSetupRequirement.into());
+            }
         }
+    }
+    ctx.insert("setup_requirements", &map);
 
-        // Generate single consolidated test file with everything
-        let test_content = self.generate_consolidated_test(idl_data, test_metadata, &idl_name)
-            .context("Failed to generate test content from template")?;
-        
-        let test_path = output_dir.join(format!("{}.test.ts", idl_name));
-        
-        fs::write(&test_path, test_content)
-            .with_context(|| format!("Failed to write test file to: {:?}", test_path))?;
-        
-        generated_files.add_file(test_path);
+    let mut pda_indices = Vec::new();
+    let mut index_1 = 0;
 
-        Ok(generated_files)
+    for r in setup_requirements.iter().cloned() {
+        index_1 += 1;
+
+        if r.requirement_type == SetupType::InitializePda {
+            pda_indices.push(index_1);
+        }
     }
 
-    /// Sanitize filename to remove invalid characters
-    pub fn sanitize_filename(name: &str) -> String {
-        name.chars()
-            .map(|c| match c {
-                'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '-' => c,
-                _ => '_',
-            })
-            .collect()
+    // pda initialization
+    let mut pda_map = HashMap::new();
+    let pda_init_sequence = meta.pda_init_sequence.clone();
+
+    for (i, pda_init) in pda_init_sequence.iter().enumerate() {
+        if let Some(index) = pda_indices.get(i) {
+        let seeds_expr = render_pda_seeds_expression(&pda_init.seeds);
+            pda_map.insert(*index, seeds_expr);
+        }
     }
 
-    /// Generate a single consolidated test file with helpers, setup, and all tests
-    fn generate_consolidated_test(
-        &self,
-        idl_data: &IdlData,
-        test_metadata: &TestMetadata,
-        program_name: &str,
-    ) -> Result<String> {
-        // Format all test cases in execution order
-        let test_suites: Vec<serde_json::Value> = test_metadata.test_cases
-            .iter()
-            .map(|test_case| {
-                // Find the instruction in IDL to get account information
-                let idl_instruction = idl_data.instructions.iter()
-                    .find(|i| i.name == test_case.instruction_name);
-                
-                let positive_tests: Vec<serde_json::Value> = test_case.positive_cases
+    ctx.insert("pda_seeds", &pda_map);
+
+    let mut account_vars: HashMap<String, String> = HashMap::new();
+
+    // First, populate from account_dependencies
+    for ad in meta.account_dependencies.iter() {
+        if ad.is_pda {
+            // find position in pda_init_sequence where account_name matches
+            if
+                let Some((pos, _)) = meta.pda_init_sequence
                     .iter()
                     .enumerate()
-                    .map(|(i, tc)| self.format_test_case(tc, i + 1, idl_instruction, &test_case.arguments))
-                    .collect();
-
-                let negative_tests: Vec<serde_json::Value> = test_case.negative_cases
-                    .iter()
-                    .enumerate()
-                    .map(|(i, tc)| self.format_test_case(tc, i + 1, idl_instruction, &test_case.arguments))
-                    .collect();
-
-                // Generate account mappings for this instruction
-                let account_mappings = if let Some(instr) = idl_instruction {
-                    self.format_account_mappings(&instr.accounts, test_metadata)
-                } else {
-                    Vec::new()
-                };
-
-                json!({
-                    "instruction_name": test_case.instruction_name,
-                    "positive_tests": positive_tests,
-                    "negative_tests": negative_tests,
-                    "has_arguments": !test_case.arguments.is_empty(),
-                    "arguments": test_case.arguments.iter().map(|arg| {
-                        json!({
-                            "name": arg.name,
-                            "type": format!("{:?}", arg.arg_type),
-                            "is_optional": arg.is_optional,
-                        })
-                    }).collect::<Vec<_>>(),
-                    "account_mappings": account_mappings,
-                })
-            })
-            .collect();
-
-        // Format setup steps
-        let setup_steps: Vec<serde_json::Value> = test_metadata.setup_requirements
-            .iter()
-            .map(|req| {
-                json!({
-                    "type": format!("{:?}", req.requirement_type),
-                    "description": req.description,
-                    "dependencies": req.dependencies,
-                    "is_keypair": matches!(req.requirement_type, solify_common::SetupType::CreateKeypair),
-                    "is_fund": matches!(req.requirement_type, solify_common::SetupType::FundAccount),
-                })
-            })
-            .collect();
-
-        // Format PDA initialization sequence
-        let pda_init: Vec<serde_json::Value> = test_metadata.pda_init_sequence
-            .iter()
-            .map(|pda| {
-                json!({
-                    "account_name": pda.account_name,
-                    "program_id": pda.program_id,
-                    "seeds": pda.seeds.iter().map(|s| {
-                        json!({
-                            "type": format!("{:?}", s.seed_type),
-                            "value": s.value,
-                        })
-                    }).collect::<Vec<_>>(),
-                })
-            })
-            .collect();
-
-        // Format account dependencies
-        let account_dependencies: Vec<serde_json::Value> = test_metadata.account_dependencies
-            .iter()
-            .map(|dep| {
-                json!({
-                    "account_name": dep.account_name,
-                    "depends_on": dep.depends_on,
-                    "is_pda": dep.is_pda,
-                    "must_be_initialized": dep.must_be_initialized,
-                })
-            })
-            .collect();
-
-        let total_positive: usize = test_metadata.test_cases.iter()
-            .map(|tc| tc.positive_cases.len())
-            .sum();
-        let total_negative: usize = test_metadata.test_cases.iter()
-            .map(|tc| tc.negative_cases.len())
-            .sum();
-
-        let data = json!({
-            "program_name": program_name,
-            "program_name_upper": program_name.to_uppercase(),
-            "program_name_camel": to_camel_case(program_name),
-            "instructions": test_metadata.instruction_order,
-            "instructions_count": test_metadata.instruction_order.len(),
-            "total_tests": total_positive + total_negative,
-            "total_positive": total_positive,
-            "total_negative": total_negative,
-            "pda_count": test_metadata.pda_init_sequence.len(),
-            "setup_count": test_metadata.setup_requirements.len(),
-            "version": idl_data.version,
-            "test_suites": test_suites,
-            "setup_steps": setup_steps,
-            "pda_init": pda_init,
-            "account_dependencies": account_dependencies,
-        });
-
-        self.handlebars.render("main_test", &data)
-            .context("Failed to render consolidated test template")
-    }
-
-
-    fn format_test_case(
-        &self,
-        test_case: &TestCase,
-        index: usize,
-        _idl_instruction: Option<&solify_common::IdlInstruction>,
-        argument_infos: &[solify_common::ArgumentInfo],
-    ) -> serde_json::Value {
-        let expected = match &test_case.expected_outcome {
-            solify_common::ExpectedOutcome::Success { state_changes } => {
-                json!({
-                    "type": "success",
-                    "is_success": true,
-                    "is_failure": false,
-                    "state_changes": state_changes,
-                })
-            }
-            solify_common::ExpectedOutcome::Failure { error_code, error_message } => {
-                json!({
-                    "type": "failure",
-                    "is_success": false,
-                    "is_failure": true,
-                    "error_code": error_code,
-                    "error_message": error_message,
-                })
-            }
-        };
-
-        // Generate actual TypeScript values for arguments
-        let arguments: Vec<serde_json::Value> = test_case.argument_values
-            .iter()
-            .map(|arg_val| {
-                // Find the argument info to get the type
-                let arg_info = argument_infos.iter()
-                    .find(|a| a.name == arg_val.argument_name);
-                
-                let ts_value = self.generate_typescript_value(
-                    &arg_val.value_type,
-                    arg_info.map(|a| &a.arg_type),
+                    .find(|(_, p)| p.account_name == ad.account_name)
+            {
+                // corresponding setup index
+                let setup_index = pda_indices[pos];
+                account_vars.insert(ad.account_name.clone(), format!("pda{}", setup_index));
+            } else {
+                // fallback: pda not found, leave placeholder
+                account_vars.insert(
+                    ad.account_name.clone(),
+                    format!("/* missing pda for {} */ null", ad.account_name)
                 );
-                
-                json!({
-                    "name": arg_val.argument_name,
-                    "value": ts_value,
-                    "is_valid": matches!(arg_val.value_type, solify_common::TestValueType::Valid { .. }),
-                })
+            }
+        } else if ad.account_name == "authority" {
+            account_vars.insert(ad.account_name.clone(), "authorityPubkey".to_string());
+        } else if ad.account_name == "system_program" {
+            account_vars.insert(ad.account_name.clone(), "SystemProgram.programId".to_string());
+        } else {
+            // default placeholder
+            account_vars.insert(ad.account_name.clone(), format!("{}", ad.account_name));
+        }
+    }
+
+    // Also add accounts from IDL that might not be in account_dependencies
+    for instruction in &idl.instructions {
+        for acc in &instruction.accounts {
+            if !account_vars.contains_key(&acc.name) {
+                // Handle common account names
+                if acc.name == "system_program" || acc.name == "systemProgram" {
+                    account_vars.insert(acc.name.clone(), "SystemProgram.programId".to_string());
+                } else if acc.name == "authority" {
+                    account_vars.insert(acc.name.clone(), "authorityPubkey".to_string());
+                } else {
+                    // Check if it's a PDA by looking at pda_init_sequence
+                    if let Some((pos, _)) = meta.pda_init_sequence
+                        .iter()
+                        .enumerate()
+                        .find(|(_, p)| p.account_name == acc.name)
+                    {
+                        if let Some(setup_index) = pda_indices.get(pos) {
+                            account_vars.insert(acc.name.clone(), format!("pda{}", setup_index));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    ctx.insert("account_vars", &account_vars);
+
+    // Create a mapping from instruction names to their accounts (with camelCase names)
+    let mut instruction_accounts: HashMap<String, Vec<AccountInfo>> = HashMap::new();
+    for instruction in &idl.instructions {
+        let account_infos: Vec<AccountInfo> = instruction.accounts.iter()
+            .map(|acc| {
+                AccountInfo {
+                    original_name: acc.name.clone(),
+                    camel_name: to_camel_case(&acc.name),
+                }
             })
             .collect();
+        instruction_accounts.insert(instruction.name.clone(), account_infos);
+    }
+    ctx.insert("instruction_accounts", &instruction_accounts);
 
-        json!({
-            "index": index,
-            "description": test_case.description,
-            "test_type": format!("{:?}", test_case.test_type),
-            "arguments": arguments,
-            "has_arguments": !arguments.is_empty(),
-            "expected": expected,
+    // Preprocess test cases to convert Rust expressions to TypeScript
+    let mut processed_test_cases = meta.test_cases.clone();
+    for test_case in &mut processed_test_cases {
+        for arg_value in &mut test_case.positive_cases {
+            for arg in &mut arg_value.argument_values {
+                arg.value_type = convert_to_typescript_value(arg.value_type.clone());
+            }
+        }
+        for arg_value in &mut test_case.negative_cases {
+            for arg in &mut arg_value.argument_values {
+                arg.value_type = convert_to_typescript_value(arg.value_type.clone());
+            }
+        }
+    }
+    ctx.insert("instruction_tests", &processed_test_cases);
+
+    let rendered = tera.render("aggregated_tests.tera", &ctx).context("render tera")?;
+
+    let out_path = tests_dir.join("{{ program_name_pascal }}.ts");
+    let mut f = File::create(&out_path).with_context(|| format!("create file {:?}", out_path))?;
+    f.write_all(rendered.as_bytes()).with_context(|| format!("write file {:?}", out_path))?;
+
+    println!("Wrote {}", out_path.display());
+    Ok(())
+}
+
+const AGGREGATED_TEMPLATE: &str =
+    r#"
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import { {{ program_name_pascal_case }} } from "../target/types/{{ program_name }}";
+import { assert } from "chai";
+import { Keypair, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+
+describe("{{ program_name | default(value='program') }}", () => {
+    // Configure the client
+    let provider = anchor.AnchorProvider.env();
+    anchor.setProvider(provider);
+    const connection = provider.connection;
+
+    const program = anchor.workspace.{{ program_name }} as Program<{{ program_name_pascal_case }}>;
+
+    // Setup Requirements
+    // keypair decelarations
+    {%- set keypair_found = false %}
+    {%- for id, code in setup_requirements %}
+    {%- if code == "Keypair.generate()" %}
+    {%- if not keypair_found %}
+    {%- set keypair_found = true %}
+    const authority = Keypair.generate();
+    const authorityPubkey = authority.publicKey;
+    {%- else %}
+    const user{{ id }} = Keypair.generate();
+    const user{{ id }}Pubkey = user{{ id }}.publicKey;
+    {%- endif %}
+    {%- endif %}
+    {%- endfor %}
+
+    // PDA Decelaration
+    {%- for id, code in setup_requirements %}
+    {%- if code == "PublicKey" %}
+    let pda{{ id }}: PublicKey;
+    let bump{{ id }}: number;
+    {%- endif %}
+    {%- endfor %}
+
+    before(async () => {
+        // ----- Airdrop for each user Keypair -----
+        {%- set keypair_found_airdrop = false %}
+        {%- for id, code in setup_requirements %}
+        {%- if code == "Keypair.generate()" %}
+        {%- if not keypair_found_airdrop %}
+        {%- set keypair_found_airdrop = true %}
+        const sig{{ id }} = await connection.requestAirdrop(authorityPubkey, 10 * LAMPORTS_PER_SOL);
+        await connection.confirmTransaction(sig{{ id }}, "confirmed");
+        {%- else %}
+        const sig{{ id }} = await connection.requestAirdrop(user{{ id }}Pubkey, 10 * LAMPORTS_PER_SOL);
+        await connection.confirmTransaction(sig{{ id }}, "confirmed");
+        {%- endif %}
+        {%- endif %}
+        {%- endfor %}
+
+        // ----- PDA Initialization -----
+        {%- for id, seeds in pda_seeds %}
+        [pda{{ id }}, bump{{ id }}] = PublicKey.findProgramAddressSync(
+            {{ seeds }},
+            program.programId
+        );
+        {%- endfor %}
+
+    });
+
+    {%- macro render_accounts(account_list) -%}
+    {%- for acc in account_list %}
+    {%- set var = account_vars[acc] | default(value='/* missing */ null') %}
+    {{ acc }}: {{ var }}{%- if not loop.last %},{%- endif %}
+    {%- endfor %}
+    {%- endmacro %}
+
+    {# ---------------- INSTRUCTION DESCRIBE BLOCKS ---------------- #}
+
+    {%- for instr in instruction_tests %}
+
+
+    {# ---------- POSITIVE TESTS ---------- #}
+    {%- for test in instr.positive_cases %}
+    it("{{ test.description }}", async () => {
+        // Prepare arguments
+        {%- for arg in test.argument_values %}
+        {%- if arg.value_type.variant == "Valid" %}
+        const {{ arg.argument_name }}Value = {{ arg.value_type.description }};
+        {%- elif arg.value_type.variant == "Invalid" %}
+        const {{ arg.argument_name }}Value = {{ arg.value_type.description }};
+        {%- else %}
+        const {{ arg.argument_name }}Value = null;
+        {%- endif %}
+        {%- endfor %}
+        // Execute instruction
+        try {
+            await program.methods
+                .{{ instr.instruction_name }}(
+                    {%- for arg in test.argument_values %}
+                    {{ arg.argument_name }}Value{%- if not loop.last %},{%- endif %}
+                    {%- endfor %}
+                )
+                .accountsStrict({
+                    {%- if instruction_accounts[instr.instruction_name] %}
+                    {%- for acc_info in instruction_accounts[instr.instruction_name] %}
+                    {%- set js_var = account_vars[acc_info.original_name] | default(value="null") %}
+                    {{ acc_info.camel_name }}: {{ js_var }}{%- if not loop.last %},{%- endif %}
+                    {%- endfor %}
+                    {%- endif %}
+                })
+                .signers([
+                    authority
+                ])
+                .rpc();
+            // Expect success
+            assert.ok(true);
+        } catch (err) {
+            assert.fail("Instruction should not have failed: " + err);
+        }
+    });
+    {%- endfor %}
+    {# ---------- NEGATIVE TESTS ---------- #}
+    {%- for test in instr.negative_cases %}
+    it("{{ test.description }}", async () => {
+        // Prepare arguments
+        {%- for arg in test.argument_values %}
+        {%- if arg.value_type.variant == "Valid" %}
+        const {{ arg.argument_name }}Value = {{ arg.value_type.description }};
+        {%- elif arg.value_type.variant == "Invalid" %}
+        const {{ arg.argument_name }}Value = {{ arg.value_type.description }};
+        {%- else %}
+        const {{ arg.argument_name }}Value = null;
+        {%- endif %}
+        {%- endfor %}
+        // Execute instruction expecting failure
+        try {
+            await program.methods
+                .{{ instr.instruction_name }}(
+                    {%- for arg in test.argument_values %}
+                    {{ arg.argument_name }}Value{%- if not loop.last %},{%- endif %}
+                    {%- endfor %}
+                )
+                .accountsStrict({
+                    {%- if instruction_accounts[instr.instruction_name] %}
+                    {%- for acc_info in instruction_accounts[instr.instruction_name] %}
+                    {%- set js_var = account_vars[acc_info.original_name] | default(value="null") %}
+                    {{ acc_info.camel_name }}: {{ js_var }}{%- if not loop.last %},{%- endif %}
+                    {%- endfor %}
+                    {%- endif %}
+                })
+                .signers([
+                    authority
+                ])
+                .rpc();
+        } catch (err) {
+            {%- if test.expected_outcome.variant == "Failure" %}
+            assert(err.message.includes("{{ test.expected_outcome.error_message }}"));
+            {%- endif %}
+        }
+    });
+    {%- endfor %}
+
+    {%- endfor %}
+
+})
+
+"#;
+
+// ------------------- Helper functions (rendering helpers) -------------------
+
+fn render_pda_seeds_expression(seeds: &[SeedComponent]) -> String {
+    let parts: Vec<String> = seeds
+        .iter()
+        .map(|seed| {
+            match seed.seed_type {
+                SeedType::Static => { format!("Buffer.from(\"{}\")", seed.value) }
+                SeedType::AccountKey => { format!("{}Pubkey.toBuffer()", seed.value) }
+                SeedType::Argument => { format!("Buffer.from(String({}))", seed.value) }
+            }
         })
-    }
+        .collect();
 
-    /// Generate TypeScript value from test value type
-    fn generate_typescript_value(
-        &self,
-        value_type: &solify_common::TestValueType,
-        arg_type: Option<&solify_common::ArgumentType>,
-    ) -> String {
-        match value_type {
-            solify_common::TestValueType::Valid { description } => {
-                // Parse the description to extract the actual value
-                // Descriptions are like: "test_value", "123", "true", etc.
-                self.parse_value_from_description(description, arg_type)
-            }
-            solify_common::TestValueType::Invalid { description, .. } => {
-                // For invalid values, we still need to generate code that will fail
-                self.parse_value_from_description(description, arg_type)
-            }
-        }
-    }
-
-    /// Parse a value from description string and convert to TypeScript
-    fn parse_value_from_description(
-        &self,
-        description: &str,
-        arg_type: Option<&solify_common::ArgumentType>,
-    ) -> String {
-        // Remove quotes if present
-        let cleaned = description.trim_matches('"').trim();
-        
-        // If description contains quotes, extract the string value
-        if cleaned.starts_with('"') && cleaned.ends_with('"') {
-            let inner = &cleaned[1..cleaned.len()-1];
-            return format!("\"{}\"", inner.replace('\\', "\\\\").replace('"', "\\\""));
-        }
-        
-        // Try to infer type from arg_type if available
-        if let Some(typ) = arg_type {
-            match typ {
-                solify_common::ArgumentType::String { .. } => {
-                    // If it's a string type, wrap in quotes
-                    format!("\"{}\"", cleaned.replace('\\', "\\\\").replace('"', "\\\""))
-                }
-                solify_common::ArgumentType::Bool => {
-                    // Try to parse as boolean
-                    if cleaned.eq_ignore_ascii_case("true") {
-                        "true".to_string()
-                    } else if cleaned.eq_ignore_ascii_case("false") {
-                        "false".to_string()
-                    } else {
-                        format!("\"{}\"", cleaned)
-                    }
-                }
-                solify_common::ArgumentType::U8
-                | solify_common::ArgumentType::U16
-                | solify_common::ArgumentType::U32
-                | solify_common::ArgumentType::U64
-                | solify_common::ArgumentType::U128
-                | solify_common::ArgumentType::I8
-                | solify_common::ArgumentType::I16
-                | solify_common::ArgumentType::I32
-                | solify_common::ArgumentType::I64
-                | solify_common::ArgumentType::I128 => {
-                    // Try to parse as number
-                    if cleaned.parse::<i64>().is_ok() || cleaned.parse::<u64>().is_ok() {
-                        cleaned.to_string()
-                    } else {
-                        format!("\"{}\"", cleaned)
-                    }
-                }
-                solify_common::ArgumentType::Pubkey => {
-                    // Check if it looks like a pubkey
-                    if cleaned.len() == 44 && cleaned.chars().all(|c| c.is_alphanumeric() || c == '_') {
-                        format!("new PublicKey(\"{}\")", cleaned)
-                    } else {
-                        format!("\"{}\"", cleaned)
-                    }
-                }
-                _ => format!("\"{}\"", cleaned),
-            }
-        } else {
-            // Fallback: try to detect type from value
-            if cleaned.parse::<i64>().is_ok() || cleaned.parse::<u64>().is_ok() {
-                cleaned.to_string()
-            } else if cleaned.eq_ignore_ascii_case("true") || cleaned.eq_ignore_ascii_case("false") {
-                cleaned.to_lowercase()
-            } else {
-                format!("\"{}\"", cleaned.replace('\\', "\\\\").replace('"', "\\\""))
-            }
-        }
-    }
-
-    /// Format account mappings for an instruction
-    fn format_account_mappings(
-        &self,
-        accounts: &[solify_common::IdlAccountItem],
-        _test_metadata: &TestMetadata,
-    ) -> Vec<serde_json::Value> {
-        accounts.iter().map(|account| {
-            let (account_source, needs_derivation) = if let Some(pda) = &account.pda {
-                // Check if PDA depends on instruction arguments
-                let has_arg_seed = pda.seeds.iter().any(|seed| seed.kind == "arg");
-                
-                if has_arg_seed {
-                    // PDA depends on arguments - need to derive dynamically
-                    let seeds: Vec<String> = pda.seeds.iter().map(|seed| {
-                        match seed.kind.as_str() {
-                            "arg" => {
-                                // Use the argument variable directly - it's already defined above
-                                format!("Buffer.from({}, 'utf8')", seed.path)
-                            }
-                            "account" => {
-                                // Get from context accounts
-                                format!("testContext.accounts.get(\"{}\")?.publicKey.toBuffer() || Buffer.alloc(32)", seed.path)
-                            }
-                            "const" => {
-                                // Static value
-                                format!("Buffer.from(\"{}\")", seed.value)
-                            }
-                            _ => "Buffer.alloc(32)".to_string(),
-                        }
-                    }).collect();
-                    
-                    let seeds_str = seeds.join(",\n      ");
-                    (format!("(await PublicKey.findProgramAddress([\n      {}\n    ], program.programId))[0]", seeds_str), true)
-                } else {
-                    // PDA doesn't depend on arguments - can use from context
-                    (format!("testContext.pdas.get(\"{}\")?.[0]", account.name), false)
-                }
-            } else if account.is_signer {
-                // It's a signer - get from context.accounts
-                (format!("testContext.accounts.get(\"{}\")?.publicKey", account.name), false)
-            } else if account.name == "system_program" {
-                ("anchor.web3.SystemProgram.programId".to_string(), false)
-            } else {
-                // Regular account - try to find in context
-                (format!("testContext.accounts.get(\"{}\")?.publicKey", account.name), false)
-            };
-            
-            json!({
-                "name": account.name,
-                "source": account_source,
-                "needs_derivation": needs_derivation,
-                "is_signer": account.is_signer,
-                "is_writable": account.is_mut,
-                "is_pda": account.pda.is_some(),
-            })
-        }).collect()
-    }
+    format!("[{}]", parts.join(", "))
 }
 
-impl Default for TestGenerator<'_> {
-    fn default() -> Self {
-        Self::new().expect("Failed to create test generator")
-    }
+fn cut_program_name(s: &str) -> String {
+    s.split('_').next().unwrap_or(s).to_string()
 }
 
-/// Convert snake_case to camelCase
+fn capitalize_first_letter(s: &str) -> String {
+    s.chars().next().unwrap_or('A').to_uppercase().to_string() + &s[1..]
+}
+
+fn camel_case(s: &str) -> String {
+    let parts: Vec<&str> = s.split('_').collect();
+    if parts.is_empty() {
+        return String::new();
+    }
+    let first = parts[0].to_lowercase();
+    let rest: String = parts[1..].iter()
+        .map(|word| {
+            if word.is_empty() {
+                String::new()
+    } else {
+                word.chars().next().unwrap().to_uppercase().to_string() + &word[1..].to_lowercase()
+            }
+        })
+        .collect();
+    first + &rest
+}
+
 fn to_camel_case(s: &str) -> String {
-    let mut result = String::new();
-    let mut capitalize_next = false;
-    
-    for (i, c) in s.chars().enumerate() {
-        if c == '_' {
-            capitalize_next = true;
-        } else if capitalize_next {
-            result.push(c.to_ascii_uppercase());
-            capitalize_next = false;
-        } else if i == 0 {
-            result.push(c.to_ascii_lowercase());
-        } else {
-            result.push(c);
+    let parts: Vec<&str> = s.split('_').collect();
+    if parts.is_empty() {
+        return String::new();
+    }
+    let first = parts[0].to_lowercase();
+    let rest: String = parts[1..].iter()
+        .map(|word| {
+            if word.is_empty() {
+                String::new()
+            } else {
+                let mut chars = word.chars();
+                if let Some(first_char) = chars.next() {
+                    first_char.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase()
+                } else {
+                    String::new()
+                }
+            }
+        })
+        .collect();
+    first + &rest
+}
+
+fn to_pascal_case(s: &str) -> String {
+    let parts: Vec<&str> = s.split('_').collect();
+    if parts.is_empty() {
+        return String::new();
+    }
+    parts.iter()
+        .map(|word| {
+            if word.is_empty() {
+                String::new()
+            } else {
+                let mut chars = word.chars();
+                if let Some(first_char) = chars.next() {
+                    first_char.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase()
+                } else {
+                    String::new()
+                }
+            }
+        })
+        .collect()
+}
+
+fn convert_to_typescript_value(value_type: TestValueType) -> TestValueType {
+    match value_type {
+        TestValueType::Valid { description } => {
+            TestValueType::Valid {
+                description: convert_rust_to_typescript(&description),
+            }
+        }
+        TestValueType::Invalid { description, reason } => {
+            TestValueType::Invalid {
+                description: convert_rust_to_typescript(&description),
+                reason,
+            }
         }
     }
+}
+
+fn convert_rust_to_typescript(value: &str) -> String {
+    let trimmed = value.trim();
     
-    result
+    // Handle Rust-specific expressions
+    match trimmed {
+        "u64::MAX" => "new anchor.BN(\"18446744073709551615\")".to_string(),
+        "u64::MIN" => "new anchor.BN(\"0\")".to_string(),
+        "u32::MAX" => "new anchor.BN(\"4294967295\")".to_string(),
+        "u32::MIN" => "new anchor.BN(\"0\")".to_string(),
+        "u16::MAX" => "new anchor.BN(\"65535\")".to_string(),
+        "u16::MIN" => "new anchor.BN(\"0\")".to_string(),
+        "u8::MAX" => "new anchor.BN(\"255\")".to_string(),
+        "u8::MIN" => "new anchor.BN(\"0\")".to_string(),
+        "i64::MAX" => "new anchor.BN(\"9223372036854775807\")".to_string(),
+        "i64::MIN" => "new anchor.BN(\"-9223372036854775808\")".to_string(),
+        "i32::MAX" => "new anchor.BN(\"2147483647\")".to_string(),
+        "i32::MIN" => "new anchor.BN(\"-2147483648\")".to_string(),
+        "i16::MAX" => "new anchor.BN(\"32767\")".to_string(),
+        "i16::MIN" => "new anchor.BN(\"-32768\")".to_string(),
+        "i8::MAX" => "new anchor.BN(\"127\")".to_string(),
+        "i8::MIN" => "new anchor.BN(\"-128\")".to_string(),
+        _ => {
+            // Check if it's a number (integer or float)
+            if let Ok(_) = trimmed.parse::<i128>() {
+                // It's an integer, wrap in anchor.BN
+                format!("new anchor.BN(\"{}\")", trimmed)
+            } else if let Ok(_) = trimmed.parse::<f64>() {
+                // It's a float, check if it's actually an integer
+                if trimmed.contains('.') {
+                    // It's a float, return as-is (though Anchor typically uses BN for integers)
+                    trimmed.to_string()
+                } else {
+                    // It's an integer represented as float, wrap in anchor.BN
+                    format!("new anchor.BN(\"{}\")", trimmed)
+                }
+            } else if trimmed.starts_with('"') && trimmed.ends_with('"') {
+                // Already a string literal
+                trimmed.to_string()
+            } else if trimmed == "true" || trimmed == "false" {
+                // Boolean values
+                trimmed.to_string()
+            } else if trimmed.starts_with("new ") || trimmed.starts_with("authority.") || trimmed.contains("Pubkey") {
+                // Already a TypeScript expression (like "new anchor.BN(...)" or "authority.publicKey")
+                trimmed.to_string()
+            } else {
+                // For other expressions, wrap in quotes if not already quoted
+                if trimmed.starts_with('"') {
+                    trimmed.to_string()
+                } else {
+                    format!("\"{}\"", trimmed)
+                }
+            }
+        }
+    }
 }
