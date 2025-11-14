@@ -3,10 +3,25 @@ name = "solify-client"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = []
+serde = []
+fetch = []
+anchor = []
+anchor-idl-build = []
+
 [dependencies]
 # Solana
 solana-sdk = "3.0.0"
 solana-client = "3.0.10"
+solana_commitment_config = { package = "solana-commitment-config", version = "3.0.0" }
+solana_pubkey = { package = "solana-pubkey", version = "3.0.0" }
+solana_instruction = { package = "solana-instruction", version = "3.0.0" }
+solana_account = { package = "solana-account", version = "3.0.0" }
+solana_account_info = { package = "solana-account-info", version = "3.0.0" }
+solana_program_error = { package = "solana-program-error", version = "3.0.0" }
+solana_cpi = { package = "solana-cpi", version = "3.0.0" }
+solana_program = { package = "solana-program", version = "3.0.0" }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -16,6 +31,8 @@ borsh = "1.5.7"
 # Error handling
 anyhow = "1.0"
 thiserror = "2.0.17"
+num-derive = "0.4"
+num-traits = "0.2"
 
 # Async
 tokio = { version = "1.35", features = ["full"] }

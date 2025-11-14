@@ -1,0 +1,119 @@
+  =======================================
+  Metadata generated successfully for idl3
+  Test metadata config: TestMetadataConfig {
+    authority: EqfGcLj56qzQpTtFJVBWx2E1g7FRWsMKdQx7iQDKyPs6,
+    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    paraphrase: "greeting_program",
+    program_name: "test_for_idl1",
+    test_metadata: TestMetadata {
+        instruction_order: [
+            "setMessage",
+        ],
+        account_dependencies: [
+            AccountDependency {
+                account_name: "greeting",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: false,
+                initialization_order: 0,
+            },
+            AccountDependency {
+                account_name: "user",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: false,
+                initialization_order: 1,
+            },
+        ],
+        pda_init_sequence: [],
+        setup_requirements: [],
+        test_cases: [
+            InstructionTestCases {
+                instruction_name: "setMessage",
+                arguments: [
+                    ArgumentInfo {
+                        name: "message",
+                        arg_type: String {
+                            max_length: None,
+                        },
+                        constraints: [
+                            MinLength {
+                                value: 1,
+                            },
+                            MaxLength {
+                                value: 100,
+                            },
+                        ],
+                        is_optional: false,
+                    },
+                ],
+                positive_cases: [
+                    TestCase {
+                        test_type: Positive,
+                        description: "setMessage - valid inputs",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Valid {
+                                    description: "\"test_value\"",
+                                },
+                            },
+                        ],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Account state updated successfully",
+                                "Instruction executed without errors",
+                            ],
+                        },
+                    },
+                ],
+                negative_cases: [
+                    TestCase {
+                        test_type: NegativeNull,
+                        description: "setMessage - message empty string",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Invalid {
+                                    description: "\"\"",
+                                    reason: "String cannot be empty",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "EmptyString",
+                            ),
+                            error_message: "String cannot be empty",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeBoundary,
+                        description: "setMessage - message too long",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Invalid {
+                                    description: "\"a\".repeat(1000)",
+                                    reason: "Exceeds maximum length",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "StringTooLong",
+                            ),
+                            error_message: "String exceeds maximum length",
+                        },
+                    },
+                ],
+            },
+        ],
+    },
+    timestamp: 0,
+}
+--------------------------------

@@ -1,0 +1,234 @@
+  =======================================
+  Metadata generated successfully for idl4
+  Test metadata config: TestMetadataConfig {
+    authority: H3oVazB4uTaLGJHCP5L2mNgmfFMx8v7wxGkkbF35ad3j,
+    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    paraphrase: "mini_escrow",
+    program_name: "test_for_idl1",
+    test_metadata: TestMetadata {
+        instruction_order: [
+            "initEscrow",
+            "cancelEscrow",
+        ],
+        account_dependencies: [
+            AccountDependency {
+                account_name: "escrow",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 0,
+            },
+            AccountDependency {
+                account_name: "initializer",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 1,
+            },
+            AccountDependency {
+                account_name: "initializerDepositTokenAccount",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 2,
+            },
+            AccountDependency {
+                account_name: "vaultTokenAccount",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 3,
+            },
+            AccountDependency {
+                account_name: "tokenProgram",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 4,
+            },
+            AccountDependency {
+                account_name: "systemProgram",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 5,
+            },
+            AccountDependency {
+                account_name: "initializerTokenAccount",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: false,
+                initialization_order: 6,
+            },
+        ],
+        pda_init_sequence: [],
+        setup_requirements: [],
+        test_cases: [
+            InstructionTestCases {
+                instruction_name: "initEscrow",
+                arguments: [
+                    ArgumentInfo {
+                        name: "amount",
+                        arg_type: U64,
+                        constraints: [
+                            Min {
+                                value: 0,
+                            },
+                            NonZero,
+                        ],
+                        is_optional: false,
+                    },
+                ],
+                positive_cases: [
+                    TestCase {
+                        test_type: Positive,
+                        description: "initEscrow - valid inputs",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "amount",
+                                value_type: Valid {
+                                    description: "1000",
+                                },
+                            },
+                        ],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Account state updated successfully",
+                                "Instruction executed without errors",
+                            ],
+                        },
+                    },
+                    TestCase {
+                        test_type: Positive,
+                        description: "amount - minimum value",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "amount",
+                                value_type: Valid {
+                                    description: "0",
+                                },
+                            },
+                        ],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Minimum value accepted",
+                            ],
+                        },
+                    },
+                ],
+                negative_cases: [
+                    TestCase {
+                        test_type: NegativeBoundary,
+                        description: "initEscrow - amount below minimum",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "amount",
+                                value_type: Invalid {
+                                    description: "-1",
+                                    reason: "Below minimum value of 0",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "ConstraintViolation",
+                            ),
+                            error_message: "amount must be at least 0",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeConstraint,
+                        description: "initEscrow - amount is zero",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "amount",
+                                value_type: Invalid {
+                                    description: "0",
+                                    reason: "Must be non-zero",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "ZeroAmount",
+                            ),
+                            error_message: "amount cannot be zero",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeOverflow,
+                        description: "initEscrow - amount overflow",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "amount",
+                                value_type: Invalid {
+                                    description: "u64::MAX",
+                                    reason: "Potential arithmetic overflow",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "Overflow",
+                            ),
+                            error_message: "Arithmetic overflow",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeType,
+                        description: "initEscrow - amount negative value",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "amount",
+                                value_type: Invalid {
+                                    description: "-1",
+                                    reason: "Unsigned type cannot be negative",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "InvalidType",
+                            ),
+                            error_message: "Unsigned integer cannot be negative",
+                        },
+                    },
+                ],
+            },
+            InstructionTestCases {
+                instruction_name: "cancelEscrow",
+                arguments: [],
+                positive_cases: [
+                    TestCase {
+                        test_type: Positive,
+                        description: "cancelEscrow - valid inputs",
+                        argument_values: [],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Account state updated successfully",
+                                "Instruction executed without errors",
+                            ],
+                        },
+                    },
+                ],
+                negative_cases: [],
+            },
+        ],
+    },
+    timestamp: 0,
+}
+--------------------------------

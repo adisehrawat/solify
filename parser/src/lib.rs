@@ -275,3 +275,19 @@ pub fn get_writable_accounts(instruction: &IdlInstruction) -> Vec<String> {
         .map(|acc| acc.name.clone())
         .collect()
 }
+
+pub fn get_program_id<P: AsRef<Path>>(idl_path: P) -> Result<String> {
+    let path = idl_path.as_ref();
+    let idl_content = fs::read_to_string(path)
+        .with_context(|| format!("Failed to read IDL file at {:?}", path))?;
+    let parsed_idl: ParsedIdl = serde_json::from_str(&idl_content)
+        .with_context(|| {
+            if let Err(e) = serde_json::from_str::<serde_json::Value>(&idl_content) {
+                format!("Invalid JSON: {}", e)
+            } else {
+                "Failed to deserialize IDL JSON - structure mismatch".to_string()
+            }
+        })?;
+    let program_id = parsed_idl.address;
+    Ok(program_id)
+}

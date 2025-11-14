@@ -1,0 +1,85 @@
+  =======================================
+  Metadata generated successfully for idl2
+  Test metadata config: TestMetadataConfig {
+    authority: 9aSK3V5VTK3yqZDnFs29o8bF7dWRM8d3P2B5AsjhbgrB,
+    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    paraphrase: "counter_program",
+    program_name: "test_for_idl1",
+    test_metadata: TestMetadata {
+        instruction_order: [
+            "initialize",
+            "increment",
+        ],
+        account_dependencies: [
+            AccountDependency {
+                account_name: "counter",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 0,
+            },
+            AccountDependency {
+                account_name: "authority",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 1,
+            },
+            AccountDependency {
+                account_name: "systemProgram",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 2,
+            },
+        ],
+        pda_init_sequence: [],
+        setup_requirements: [],
+        test_cases: [
+            InstructionTestCases {
+                instruction_name: "initialize",
+                arguments: [],
+                positive_cases: [
+                    TestCase {
+                        test_type: Positive,
+                        description: "initialize - valid inputs",
+                        argument_values: [],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Account state updated successfully",
+                                "Instruction executed without errors",
+                            ],
+                        },
+                    },
+                ],
+                negative_cases: [],
+            },
+            InstructionTestCases {
+                instruction_name: "increment",
+                arguments: [],
+                positive_cases: [
+                    TestCase {
+                        test_type: Positive,
+                        description: "increment - valid inputs",
+                        argument_values: [],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Account state updated successfully",
+                                "Instruction executed without errors",
+                            ],
+                        },
+                    },
+                ],
+                negative_cases: [],
+            },
+        ],
+    },
+    timestamp: 0,
+}
+--------------------------------

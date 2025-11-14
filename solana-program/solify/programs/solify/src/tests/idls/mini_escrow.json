@@ -1,0 +1,96 @@
+{
+    "version": "0.1.0",
+    "name": "mini_escrow",
+    "instructions": [
+        {
+            "name": "initEscrow",
+            "accounts": [
+                {
+                    "name": "escrow",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "initializer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "initializerDepositTokenAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "vaultTokenAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "amount",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "cancelEscrow",
+            "accounts": [
+                {
+                    "name": "escrow",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "initializer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "vaultTokenAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "initializerTokenAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        }
+    ],
+    "accounts": [
+        {
+            "name": "escrow",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "initializer",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "amount",
+                        "type": "u64"
+                    }
+                ]
+            }
+        }
+    ]
+}

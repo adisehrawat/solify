@@ -1,0 +1,496 @@
+  =======================================
+  Metadata generated successfully for idl1
+  Test metadata config: TestMetadataConfig {
+    authority: 2EK2HTV814LkSdHWG1oEdWELuQ4bBLwrfAy61jH7AjfW,
+    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    paraphrase: "journal",
+    program_name: "test_for_idl1",
+    test_metadata: TestMetadata {
+        instruction_order: [
+            "create_journal_entry",
+            "update_journal_entry",
+            "delete_journal_entry",
+        ],
+        account_dependencies: [
+            AccountDependency {
+                account_name: "journal_entry",
+                depends_on: [
+                    "owner",
+                ],
+                is_pda: true,
+                is_signer: false,
+                is_mut: true,
+                must_be_initialized: true,
+                initialization_order: 0,
+            },
+            AccountDependency {
+                account_name: "owner",
+                depends_on: [],
+                is_pda: false,
+                is_signer: true,
+                is_mut: true,
+                must_be_initialized: true,
+                initialization_order: 1,
+            },
+            AccountDependency {
+                account_name: "system_program",
+                depends_on: [],
+                is_pda: false,
+                is_signer: false,
+                is_mut: false,
+                must_be_initialized: true,
+                initialization_order: 2,
+            },
+        ],
+        pda_init_sequence: [
+            PdaInit {
+                account_name: "journal_entry",
+                seeds: [
+                    SeedComponent {
+                        seed_type: Argument,
+                        value: "title",
+                    },
+                    SeedComponent {
+                        seed_type: AccountKey,
+                        value: "owner",
+                    },
+                ],
+                program_id: 11111111111111111111111111111111,
+                space: Some(
+                    72,
+                ),
+            },
+        ],
+        setup_requirements: [
+            SetupRequirement {
+                requirement_type: CreateKeypair,
+                description: "Create keypair for owner",
+                dependencies: [],
+            },
+            SetupRequirement {
+                requirement_type: FundAccount,
+                description: "Fund owner with SOL for transactions",
+                dependencies: [
+                    "owner",
+                ],
+            },
+            SetupRequirement {
+                requirement_type: InitializePda,
+                description: "Initialize journal_entry PDA",
+                dependencies: [
+                    "owner",
+                ],
+            },
+        ],
+        test_cases: [
+            InstructionTestCases {
+                instruction_name: "create_journal_entry",
+                arguments: [
+                    ArgumentInfo {
+                        name: "title",
+                        arg_type: String {
+                            max_length: None,
+                        },
+                        constraints: [
+                            MinLength {
+                                value: 1,
+                            },
+                            MaxLength {
+                                value: 100,
+                            },
+                        ],
+                        is_optional: false,
+                    },
+                    ArgumentInfo {
+                        name: "message",
+                        arg_type: String {
+                            max_length: None,
+                        },
+                        constraints: [
+                            MinLength {
+                                value: 1,
+                            },
+                            MaxLength {
+                                value: 100,
+                            },
+                        ],
+                        is_optional: false,
+                    },
+                ],
+                positive_cases: [
+                    TestCase {
+                        test_type: Positive,
+                        description: "create_journal_entry - valid inputs",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Valid {
+                                    description: "\"test_value\"",
+                                },
+                            },
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Valid {
+                                    description: "\"test_value\"",
+                                },
+                            },
+                        ],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Account state updated successfully",
+                                "Instruction executed without errors",
+                            ],
+                        },
+                    },
+                ],
+                negative_cases: [
+                    TestCase {
+                        test_type: NegativeNull,
+                        description: "create_journal_entry - title empty string",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Invalid {
+                                    description: "\"\"",
+                                    reason: "String cannot be empty",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "EmptyString",
+                            ),
+                            error_message: "String cannot be empty",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeBoundary,
+                        description: "create_journal_entry - title too long",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Invalid {
+                                    description: "\"a\".repeat(1000)",
+                                    reason: "Exceeds maximum length",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "StringTooLong",
+                            ),
+                            error_message: "String exceeds maximum length",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeNull,
+                        description: "create_journal_entry - message empty string",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Invalid {
+                                    description: "\"\"",
+                                    reason: "String cannot be empty",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "EmptyString",
+                            ),
+                            error_message: "String cannot be empty",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeBoundary,
+                        description: "create_journal_entry - message too long",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Invalid {
+                                    description: "\"a\".repeat(1000)",
+                                    reason: "Exceeds maximum length",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "StringTooLong",
+                            ),
+                            error_message: "String exceeds maximum length",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeConstraint,
+                        description: "create_journal_entry - all arguments invalid",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Invalid {
+                                    description: "invalid",
+                                    reason: "Multiple validation failures",
+                                },
+                            },
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Invalid {
+                                    description: "invalid",
+                                    reason: "Multiple validation failures",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: None,
+                            error_message: "Multiple validation errors",
+                        },
+                    },
+                ],
+            },
+            InstructionTestCases {
+                instruction_name: "update_journal_entry",
+                arguments: [
+                    ArgumentInfo {
+                        name: "title",
+                        arg_type: String {
+                            max_length: None,
+                        },
+                        constraints: [
+                            MinLength {
+                                value: 1,
+                            },
+                            MaxLength {
+                                value: 100,
+                            },
+                        ],
+                        is_optional: false,
+                    },
+                    ArgumentInfo {
+                        name: "message",
+                        arg_type: String {
+                            max_length: None,
+                        },
+                        constraints: [
+                            MinLength {
+                                value: 1,
+                            },
+                            MaxLength {
+                                value: 100,
+                            },
+                        ],
+                        is_optional: false,
+                    },
+                ],
+                positive_cases: [
+                    TestCase {
+                        test_type: Positive,
+                        description: "update_journal_entry - valid inputs",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Valid {
+                                    description: "\"test_value\"",
+                                },
+                            },
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Valid {
+                                    description: "\"test_value\"",
+                                },
+                            },
+                        ],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Account state updated successfully",
+                                "Instruction executed without errors",
+                            ],
+                        },
+                    },
+                ],
+                negative_cases: [
+                    TestCase {
+                        test_type: NegativeNull,
+                        description: "update_journal_entry - title empty string",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Invalid {
+                                    description: "\"\"",
+                                    reason: "String cannot be empty",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "EmptyString",
+                            ),
+                            error_message: "String cannot be empty",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeBoundary,
+                        description: "update_journal_entry - title too long",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Invalid {
+                                    description: "\"a\".repeat(1000)",
+                                    reason: "Exceeds maximum length",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "StringTooLong",
+                            ),
+                            error_message: "String exceeds maximum length",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeNull,
+                        description: "update_journal_entry - message empty string",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Invalid {
+                                    description: "\"\"",
+                                    reason: "String cannot be empty",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "EmptyString",
+                            ),
+                            error_message: "String cannot be empty",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeBoundary,
+                        description: "update_journal_entry - message too long",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Invalid {
+                                    description: "\"a\".repeat(1000)",
+                                    reason: "Exceeds maximum length",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "StringTooLong",
+                            ),
+                            error_message: "String exceeds maximum length",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeConstraint,
+                        description: "update_journal_entry - all arguments invalid",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Invalid {
+                                    description: "invalid",
+                                    reason: "Multiple validation failures",
+                                },
+                            },
+                            TestArgumentValue {
+                                argument_name: "message",
+                                value_type: Invalid {
+                                    description: "invalid",
+                                    reason: "Multiple validation failures",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: None,
+                            error_message: "Multiple validation errors",
+                        },
+                    },
+                ],
+            },
+            InstructionTestCases {
+                instruction_name: "delete_journal_entry",
+                arguments: [
+                    ArgumentInfo {
+                        name: "title",
+                        arg_type: String {
+                            max_length: None,
+                        },
+                        constraints: [
+                            MinLength {
+                                value: 1,
+                            },
+                            MaxLength {
+                                value: 100,
+                            },
+                        ],
+                        is_optional: false,
+                    },
+                ],
+                positive_cases: [
+                    TestCase {
+                        test_type: Positive,
+                        description: "delete_journal_entry - valid inputs",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Valid {
+                                    description: "\"test_value\"",
+                                },
+                            },
+                        ],
+                        expected_outcome: Success {
+                            state_changes: [
+                                "Account state updated successfully",
+                                "Instruction executed without errors",
+                            ],
+                        },
+                    },
+                ],
+                negative_cases: [
+                    TestCase {
+                        test_type: NegativeNull,
+                        description: "delete_journal_entry - title empty string",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Invalid {
+                                    description: "\"\"",
+                                    reason: "String cannot be empty",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "EmptyString",
+                            ),
+                            error_message: "String cannot be empty",
+                        },
+                    },
+                    TestCase {
+                        test_type: NegativeBoundary,
+                        description: "delete_journal_entry - title too long",
+                        argument_values: [
+                            TestArgumentValue {
+                                argument_name: "title",
+                                value_type: Invalid {
+                                    description: "\"a\".repeat(1000)",
+                                    reason: "Exceeds maximum length",
+                                },
+                            },
+                        ],
+                        expected_outcome: Failure {
+                            error_code: Some(
+                                "StringTooLong",
+                            ),
+                            error_message: "String exceeds maximum length",
+                        },
+                    },
+                ],
+            },
+        ],
+    },
+    timestamp: 0,
+}
+--------------------------------

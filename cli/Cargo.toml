@@ -37,6 +37,7 @@ log = "0.4"
 solana-sdk = "3.0.0"
 solana-client = "3.0.10"
 solana-transaction-status = "3.0.0"
+solana-commitment-config = "3.0.0"
 
 # Utilities
 chrono = "0.4"

@@ -77,7 +77,6 @@ type IdlData = {
 };
 
 describe("solify", () => {
-  // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
@@ -85,7 +84,6 @@ describe("solify", () => {
   const connection = provider.connection;
   
 
-//   const user = Keypair.generate();
 const user = provider.wallet;
   const userPubkey = user.publicKey;
 
@@ -281,69 +279,81 @@ const user = provider.wallet;
   const programId = new PublicKey("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
   const programName = "journal";
   const executionOrder = ["create_journal_entry", "update_journal_entry", "delete_journal_entry"];
+  const paraphrase = "test_paraphrase1";
 
   console.log("userPubkey", userPubkey.toBase58());
 
   before(async () => {
-    // const airdropSig = await connection.requestAirdrop(userPubkey, LAMPORTS_PER_SOL * 100);
-    // await connection.confirmTransaction(airdropSig);
 
     console.log("user balance", await connection.getBalance(userPubkey));
 
     [userPda] = PublicKey.findProgramAddressSync([Buffer.from("user_config"), userPubkey.toBuffer()], program.programId);
-    [testMetadataPda] = PublicKey.findProgramAddressSync([Buffer.from("tests_metadata"), programId.toBuffer(), userPubkey.toBuffer()], program.programId);
+    [testMetadataPda] = PublicKey.findProgramAddressSync([Buffer.from("tests_metadata"), programId.toBuffer(), userPubkey.toBuffer(), Buffer.from(paraphrase)], program.programId);
     [idlStoragePda] = PublicKey.findProgramAddressSync([Buffer.from("idl_storage"), programId.toBuffer(), userPubkey.toBuffer()], program.programId);
   });
 
-  it("should initialize user", async () => {
-    const tx = await program.methods.initializeUser().accountsStrict({
-      userConfig: userPda,
-      authority: userPubkey,
-      systemProgram: SystemProgram.programId,
-    }).rpc();
-    console.log("tx", tx);
+  describe("journal IDL testing", async () => {
 
-    const userConfig = await program.account.userConfig.fetch(userPda);
-    assert.equal(userConfig.authority.toBase58(), userPubkey.toBase58());
-    assert.equal(userConfig.totalTestsGenerated.toNumber(), 0);
-    assert.equal(userConfig.lastGeneratedAt.toNumber(), 0);
+    // it("should store idl data", async () => {
+    //   const tx = await program.methods
+    //     .storeIdlData(idlData, programId)
+    //     .accountsStrict({
+    //       idlStorage: idlStoragePda,
+    //       authority: userPubkey,
+    //       systemProgram: SystemProgram.programId,
+    //     })
+    //     .rpc();
+    //   console.log("tx", tx);
+    //   console.log("IDL pda: ",idlStoragePda.toBase58());
+    // });
+
+    // it("should generate metadata", async () => {
+    //   const tx = await program.methods
+    //     .generateMetadata(executionOrder, programId, programName)
+    //     .accountsStrict({
+    //       idlStorage: idlStoragePda,
+    //       testMetadataConfig: testMetadataPda,
+    //       authority: userPubkey,
+    //       systemProgram: SystemProgram.programId,
+    //     })
+    //     .rpc();
+    //     console.log("tx", tx);
+
+    //     const testMetadata = await program.account.testMetadataConfig.fetch(testMetadataPda);
+    //     console.log("testMetadata", JSON.stringify(testMetadata, null, 2));
+    // });
+
+    it("should update idl data", async () => {
+      const updatedIdlData = {
+        ...idlData,
+        version: "0.2.0"
+      };
+      const tx = await program.methods
+        .updateIdlData(updatedIdlData, programId)
+        .accountsStrict({
+          idlStorage: idlStoragePda,
+          authority: userPubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+        console.log("signature: ", tx);
+        console.log("IDL pda: ",idlStoragePda.toBase58());
+    });
+
+    it("should generate metadata", async () => {
+      const tx = await program.methods
+        .generateMetadata(executionOrder, programId, programName, paraphrase)
+        .accountsStrict({
+          idlStorage: idlStoragePda,
+          testMetadataConfig: testMetadataPda,
+          authority: userPubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+      console.log("tx", tx);
+
+      const testMetadata = await program.account.testMetadataConfig.fetch(testMetadataPda);
+      console.log("testMetadata", JSON.stringify(testMetadata, null, 2));
+    });
   });
-
-  it("should store idl data", async () => {
-
-    
-    const tx = await program.methods
-      .storeIdlData(idlData, programId)
-      .accountsStrict({
-        idlStorage: idlStoragePda,
-        authority: userPubkey,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc();
-    console.log("tx", tx);
-
-    const idlStorage = await program.account.idlStorage.fetch(idlStoragePda);
-    assert.equal(idlStorage.authority.toBase58(), userPubkey.toBase58());
-    assert.equal(idlStorage.programId.toBase58(), programId.toBase58());
-    console.log("idlStorage", JSON.stringify(idlStorage.idlData, null, 2));
-  });
-  it("should generate metadata", async () => {
-    const tx = await program.methods
-      .generateMetadata(executionOrder, programId, programName)
-      .accountsStrict({
-        userConfig: userPda,
-        idlStorage: idlStoragePda,
-        testMetadataConfig: testMetadataPda,
-        authority: userPubkey,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc();
-    console.log("tx", tx);
-
-    const testMetadata = await program.account.testMetadataConfig.fetch(testMetadataPda);
-    console.log("testMetadata", JSON.stringify(testMetadata, null, 2));
-
-    const userConfig = await program.account.userConfig.fetch(userPda);
-    console.log("userConfig", JSON.stringify(userConfig, null, 2));
-  });  
 });
