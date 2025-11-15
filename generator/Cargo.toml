@@ -25,7 +25,7 @@ serde_json = "1.0"
 chrono = "0.4"
 
 # Internal dependencies
-solify-common = { path = "../common" }
+solify-common = "0.1.0"
 tera = "1.0.0"
 
 [dev-dependencies]
