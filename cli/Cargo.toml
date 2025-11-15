@@ -51,7 +51,8 @@ chrono = "0.4"
 bs58 = "0.5"
 shellexpand = "3.1"
 
-# Internal dependencies
+# Internal dependencies (use path for development, version for publishing)
+# When publishing, change these to: solify-common = "0.1.0", etc.
 solify-common = { path = "../common" }
 solify-parser = { path = "../parser" }
 solify-generator = { path = "../generator" }
