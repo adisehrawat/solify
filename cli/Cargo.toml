@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/adisehrawat/solify"
 keywords = ["solana", "anchor", "testing", "cli", "blockchain"]
 categories = ["command-line-utilities", "development-tools"]
-readme = "../../README.md"
+readme = "../README.md"
 
 [[bin]]
 name = "solify"
