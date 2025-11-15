@@ -2,6 +2,12 @@
 name = "solify-parser"
 version = "0.1.0"
 edition = "2021"
+authors = ["Aditya Sehrawat <sehrawataditya22@gmail.com>"]
+description = "IDL parser for Solify - parses Anchor IDL files and extracts program structure"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/adisehrawat/solify"
+keywords = ["solana", "anchor", "testing", "idl", "parser"]
+categories = ["development-tools"]
 
 [dependencies]
 # Core serialization

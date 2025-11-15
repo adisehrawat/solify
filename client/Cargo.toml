@@ -2,6 +2,12 @@
 name = "solify-client"
 version = "0.1.0"
 edition = "2021"
+authors = ["Aditya Sehrawat <sehrawataditya22@gmail.com>"]
+description = "Solana RPC client wrapper for Solify - handles on-chain transaction execution"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/adisehrawat/solify"
+keywords = ["solana", "anchor", "testing", "rpc", "client"]
+categories = ["development-tools"]
 
 [features]
 default = []
