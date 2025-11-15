@@ -1,6 +1,6 @@
 [package]
 name = "solify-generator"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Aditya Sehrawat <sehrawataditya22@gmail.com>"]
 description = "Test generator for Solify - generates TypeScript test files from program metadata"
