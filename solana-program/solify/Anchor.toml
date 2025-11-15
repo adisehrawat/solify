@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-solify = "4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb"
+solify = "7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa"
 
 [registry]
 url = "https://api.apr.dev"
@@ -17,4 +17,3 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "cargo test -- --no-capture"
-# test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 \"tests/**/*.ts\""

@@ -559,7 +559,6 @@ async fn inspect_transaction_interactive(
                 ])
                 .split(f.area());
 
-            // Header
             render_banner(
                 f,
                 chunks[0],
@@ -567,9 +566,7 @@ async fn inspect_transaction_interactive(
                 Some("[q: quit | r: refresh]"),
             );
 
-            // Transaction info
             if let Some(ref details) = tx_details {
-                // Overview section
                 let sig_short = if details.signature.len() > 20 {
                     format!("{}...{}", &details.signature[..10], &details.signature[details.signature.len()-8..])
                 } else {
@@ -593,7 +590,6 @@ async fn inspect_transaction_interactive(
 
                 render_info_box(f, chunks[1], "", overview);
 
-                // Split main area into sections
                 let main_chunks = Layout::default()
                     .direction(Direction::Horizontal)
                     .constraints([
@@ -807,7 +803,6 @@ async fn inspect_transaction_interactive(
             AppEvent::Quit => break,
             AppEvent::Char('r') | AppEvent::Char('R') => {
                 info!("Refreshing transaction data...");
-                // Would re-fetch transaction here
             }
             AppEvent::MouseScroll { up, column, row } => {
                 let mut handled = false;
@@ -853,8 +848,6 @@ async fn inspect_transaction_interactive(
     }
 
     restore_terminal(terminal)?;
-
-    // Print summary to console
     if let Some(_) = tx_details {
         println!("\n✓ Transaction inspection complete");
         println!("  Signature: {}", signature_str);

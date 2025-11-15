@@ -25,7 +25,7 @@ pub use parse_idl::*;
 
 pub mod parsed_idl;
 
-const PROGRAM_ID: Pubkey = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
+const PROGRAM_ID: Pubkey = pubkey!("7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa");
 
 
 
@@ -80,7 +80,7 @@ fn test_for_idl1() {
     let (mut svm, user) = setup_test_environment();
     let user_pubkey = user.pubkey();
 
-    let test_program_id = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
+    let test_program_id = pubkey!("7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa");
     let idl_storage_pda = get_idl_storage_pda(&test_program_id, &user_pubkey);
     let idl_data = create_test_idl_data("src/tests/idls/journal.json".to_string());
     let anchor_test_program_id = AnchorPubkey::new_from_array(test_program_id.to_bytes());
@@ -175,7 +175,7 @@ fn test_for_idl2() {
     let (mut svm, user) = setup_test_environment();
     let user_pubkey = user.pubkey();
 
-    let test_program_id = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
+    let test_program_id = pubkey!("7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa");
     let idl_storage_pda = get_idl_storage_pda(&test_program_id, &user_pubkey);
     let idl_data = create_test_idl_data("src/tests/idls/counter_program.json".to_string());
     let anchor_test_program_id = AnchorPubkey::new_from_array(test_program_id.to_bytes());
@@ -269,7 +269,7 @@ fn test_for_idl3() {
     let (mut svm, user) = setup_test_environment();
     let user_pubkey = user.pubkey();
 
-    let test_program_id = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
+    let test_program_id = pubkey!("7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa");
     let idl_storage_pda = get_idl_storage_pda(&test_program_id, &user_pubkey);
     let idl_data = create_test_idl_data("src/tests/idls/greeting_program.json".to_string());
     let anchor_test_program_id = AnchorPubkey::new_from_array(test_program_id.to_bytes());
@@ -362,7 +362,7 @@ fn test_for_idl4() {
     let (mut svm, user) = setup_test_environment();
     let user_pubkey = user.pubkey();
 
-    let test_program_id = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
+    let test_program_id = pubkey!("7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa");
     let idl_storage_pda = get_idl_storage_pda(&test_program_id, &user_pubkey);
     let idl_data = create_test_idl_data("src/tests/idls/mini_escrow.json".to_string());
     let anchor_test_program_id = AnchorPubkey::new_from_array(test_program_id.to_bytes());
@@ -456,7 +456,7 @@ fn test_for_idl5() {
     let (mut svm, user) = setup_test_environment();
     let user_pubkey = user.pubkey();
 
-    let test_program_id = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
+    let test_program_id = pubkey!("7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa");
     let idl_storage_pda = get_idl_storage_pda(&test_program_id, &user_pubkey);
     let idl_data = create_test_idl_data("src/tests/idls/token_vault.json".to_string());
     let anchor_test_program_id = AnchorPubkey::new_from_array(test_program_id.to_bytes());

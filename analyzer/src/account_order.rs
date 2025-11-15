@@ -101,7 +101,7 @@ impl AccountOrder {
     fn get_account_dependencies(
         &self,
         account: &AccountInfo,
-        registry: &AccountRegistry,
+        _registry: &AccountRegistry,
     ) -> Vec<String> {
         let mut dependencies = Vec::new();
 

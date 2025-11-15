@@ -29,9 +29,9 @@ enum Commands {
         signature: String,
     },
     GenTest {
-        #[arg(short, long, default_value = "./target/idl")]
+        #[arg(short, long, default_value = "target/idl")]
         idl: PathBuf,
-        #[arg(short = 'o', long, default_value = "./tests")]
+        #[arg(short = 'o', long, default_value = "tests")]
         output: PathBuf,
     }
 }

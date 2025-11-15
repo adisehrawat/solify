@@ -29,8 +29,6 @@ pub fn generate_with_tera(
 ) -> Result<()> {
     let out_dir = out_dir.as_ref();
     create_dir_all(out_dir).with_context(|| format!("creating output dir {:?}", out_dir))?;
-    let tests_dir = out_dir.join("tests");
-    create_dir_all(&tests_dir).with_context(|| format!("creating tests dir {:?}", tests_dir))?;
 
     let mut tera = Tera::default();
     tera
@@ -49,9 +47,7 @@ pub fn generate_with_tera(
     ctx.insert("program_capitalized", &program_capitalized);
     ctx.insert("program_name_camel", &program_name_camel);
     ctx.insert("program_name_pascal_case", &program_name_pascal_case);
-    // 1. setup test environment -------
-    // 2. pda initialization
-    // 3. writing tests
+    
 
     // setup requirements
     let setup_requirements = meta.setup_requirements.clone();
@@ -104,21 +100,17 @@ pub fn generate_with_tera(
 
     let mut account_vars: HashMap<String, String> = HashMap::new();
 
-    // First, populate from account_dependencies
     for ad in meta.account_dependencies.iter() {
         if ad.is_pda {
-            // find position in pda_init_sequence where account_name matches
             if
                 let Some((pos, _)) = meta.pda_init_sequence
                     .iter()
                     .enumerate()
                     .find(|(_, p)| p.account_name == ad.account_name)
             {
-                // corresponding setup index
                 let setup_index = pda_indices[pos];
                 account_vars.insert(ad.account_name.clone(), format!("pda{}", setup_index));
             } else {
-                // fallback: pda not found, leave placeholder
                 account_vars.insert(
                     ad.account_name.clone(),
                     format!("/* missing pda for {} */ null", ad.account_name)
@@ -129,22 +121,18 @@ pub fn generate_with_tera(
         } else if ad.account_name == "system_program" {
             account_vars.insert(ad.account_name.clone(), "SystemProgram.programId".to_string());
         } else {
-            // default placeholder
             account_vars.insert(ad.account_name.clone(), format!("{}", ad.account_name));
         }
     }
 
-    // Also add accounts from IDL that might not be in account_dependencies
     for instruction in &idl.instructions {
         for acc in &instruction.accounts {
             if !account_vars.contains_key(&acc.name) {
-                // Handle common account names
                 if acc.name == "system_program" || acc.name == "systemProgram" {
                     account_vars.insert(acc.name.clone(), "SystemProgram.programId".to_string());
                 } else if acc.name == "authority" {
                     account_vars.insert(acc.name.clone(), "authorityPubkey".to_string());
                 } else {
-                    // Check if it's a PDA by looking at pda_init_sequence
                     if let Some((pos, _)) = meta.pda_init_sequence
                         .iter()
                         .enumerate()
@@ -160,8 +148,6 @@ pub fn generate_with_tera(
     }
 
     ctx.insert("account_vars", &account_vars);
-
-    // Create a mapping from instruction names to their accounts (with camelCase names)
     let mut instruction_accounts: HashMap<String, Vec<AccountInfo>> = HashMap::new();
     for instruction in &idl.instructions {
         let account_infos: Vec<AccountInfo> = instruction.accounts.iter()
@@ -176,7 +162,6 @@ pub fn generate_with_tera(
     }
     ctx.insert("instruction_accounts", &instruction_accounts);
 
-    // Preprocess test cases to convert Rust expressions to TypeScript
     let mut processed_test_cases = meta.test_cases.clone();
     for test_case in &mut processed_test_cases {
         for arg_value in &mut test_case.positive_cases {
@@ -194,7 +179,7 @@ pub fn generate_with_tera(
 
     let rendered = tera.render("aggregated_tests.tera", &ctx).context("render tera")?;
 
-    let out_path = tests_dir.join("{{ program_name_pascal }}.ts");
+    let out_path = out_dir.join(format!("{}.ts", program_name_pascal));
     let mut f = File::create(&out_path).with_context(|| format!("create file {:?}", out_path))?;
     f.write_all(rendered.as_bytes()).with_context(|| format!("write file {:?}", out_path))?;
 
@@ -473,7 +458,6 @@ fn convert_to_typescript_value(value_type: TestValueType) -> TestValueType {
 fn convert_rust_to_typescript(value: &str) -> String {
     let trimmed = value.trim();
     
-    // Handle Rust-specific expressions
     match trimmed {
         "u64::MAX" => "new anchor.BN(\"18446744073709551615\")".to_string(),
         "u64::MIN" => "new anchor.BN(\"0\")".to_string(),
@@ -492,30 +476,21 @@ fn convert_rust_to_typescript(value: &str) -> String {
         "i8::MAX" => "new anchor.BN(\"127\")".to_string(),
         "i8::MIN" => "new anchor.BN(\"-128\")".to_string(),
         _ => {
-            // Check if it's a number (integer or float)
             if let Ok(_) = trimmed.parse::<i128>() {
-                // It's an integer, wrap in anchor.BN
                 format!("new anchor.BN(\"{}\")", trimmed)
             } else if let Ok(_) = trimmed.parse::<f64>() {
-                // It's a float, check if it's actually an integer
                 if trimmed.contains('.') {
-                    // It's a float, return as-is (though Anchor typically uses BN for integers)
                     trimmed.to_string()
                 } else {
-                    // It's an integer represented as float, wrap in anchor.BN
                     format!("new anchor.BN(\"{}\")", trimmed)
                 }
             } else if trimmed.starts_with('"') && trimmed.ends_with('"') {
-                // Already a string literal
                 trimmed.to_string()
             } else if trimmed == "true" || trimmed == "false" {
-                // Boolean values
                 trimmed.to_string()
             } else if trimmed.starts_with("new ") || trimmed.starts_with("authority.") || trimmed.contains("Pubkey") {
-                // Already a TypeScript expression (like "new anchor.BN(...)" or "authority.publicKey")
                 trimmed.to_string()
             } else {
-                // For other expressions, wrap in quotes if not already quoted
                 if trimmed.starts_with('"') {
                     trimmed.to_string()
                 } else {

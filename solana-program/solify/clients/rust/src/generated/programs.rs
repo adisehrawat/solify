@@ -9,5 +9,5 @@ use solana_pubkey::{pubkey, Pubkey};
 
 
   /// `solify` program ID.
-  pub const SOLIFY_ID: Pubkey = pubkey!("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
+  pub const SOLIFY_ID: Pubkey = pubkey!("7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa");
 
