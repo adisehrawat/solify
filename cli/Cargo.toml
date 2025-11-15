@@ -57,4 +57,5 @@ solify-common = "0.1.0"
 solify-parser = "0.1.0"
 solify-generator = "0.1.0"
 solify-client = "0.1.0"
+solify-analyzer = "0.1.0"
 

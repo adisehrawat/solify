@@ -63,6 +63,11 @@ cargo install --path cli
    solify gen-test --idl target/idl/your_program.json --output tests
    ```
 
+   Or off-chain computation:
+   ```bash
+   solify gen-test --off
+   ```
+
 4. **Follow the interactive prompts**:
    - Select the order of instructions to test
    - Provide your wallet keypair path (default: `~/.config/solana/id.json`)
@@ -102,6 +107,7 @@ solify gen-test [OPTIONS]
 - `-o, --output <PATH>`: Output directory for generated test files (default: `tests`)
 - `--rpc-url <URL>`: Solana RPC endpoint URL (default: `https://api.devnet.solana.com`)
 - `-v, --verbose`: Enable verbose logging
+- `-off`: For off chain computation
 
 **Examples:**
 
@@ -120,6 +126,9 @@ solify gen-test --rpc-url https://api.mainnet-beta.solana.com
 
 # Enable verbose output
 solify gen-test --verbose
+
+# Enable off-chain computation
+solify gen-test --off
 ```
 
 **Interactive Flow:**

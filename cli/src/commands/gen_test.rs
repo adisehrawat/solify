@@ -14,6 +14,7 @@ use std::{ fs, path::PathBuf };
 use std::time::Duration;
 use solana_commitment_config::CommitmentConfig;
 use solify_generator::generate_with_tera;
+use solify_analyzer::DependencyAnalyzer;
 
 use crate::tui::{
     AppEvent,
@@ -55,7 +56,7 @@ fn resolve_idl_file(idl_path: PathBuf) -> Result<PathBuf> {
     }
 }
 
-pub async fn execute(idl_path: PathBuf, output: PathBuf, rpc_url: &str) -> Result<()> {
+pub async fn execute(idl_path: PathBuf, output: PathBuf, rpc_url: &str, off_chain: bool) -> Result<()> {
     info!("Starting test generation process...");
 
     let resolved_idl_path = resolve_idl_file(idl_path)?;
@@ -108,7 +109,8 @@ pub async fn execute(idl_path: PathBuf, output: PathBuf, rpc_url: &str) -> Resul
         &output,
         &anchor_test_dir,
         rpc_url,
-        &paraphrase
+        &paraphrase,
+        off_chain
     ).await?;
 
     Ok(())
@@ -122,7 +124,8 @@ async fn run_interactive_test_generation(
     output: &PathBuf,
     anchor_test_dir: &Option<PathBuf>,
     rpc_url: &str,
-    paraphrase: &str
+    paraphrase: &str,
+    off_chain: bool
 ) -> Result<()> {
     let mut terminal = init_terminal()?;
     let event_handler = EventHandler::new(Duration::from_millis(100));
@@ -140,8 +143,18 @@ async fn run_interactive_test_generation(
     let wallet_clone = wallet_path.clone();
     let paraphrase_clone = paraphrase.to_string();
 
-    let mut onchain_handle = Some(
-        tokio::spawn(async move {
+    let mut onchain_handle = if off_chain {
+        // Use off-chain computation
+        Some(tokio::spawn(async move {
+            process_offchain(
+                &idl_clone,
+                &execution_order_clone,
+                &program_clone
+            )
+        }))
+    } else {
+        // Use on-chain computation
+        Some(tokio::spawn(async move {
             process_onchain(
                 &idl_clone,
                 &execution_order_clone,
@@ -150,8 +163,8 @@ async fn run_interactive_test_generation(
                 &wallet_clone,
                 &paraphrase_clone
             ).await
-        })
-    );
+        }))
+    };
 
     loop {
         terminal.draw(|f| {
@@ -166,11 +179,16 @@ async fn run_interactive_test_generation(
                 ])
                 .split(f.area());
 
+            let banner_msg = if off_chain {
+                "Processing off-chain (local computation)..."
+            } else {
+                "Processing on-chain with Solify program..."
+            };
             render_banner(
                 f,
                 chunks[0],
                 "Generating Test Metadata",
-                Some("Processing on-chain with Solify program...")
+                Some(banner_msg)
             );
 
             render_progress(f, chunks[1], "Generating Test Metadata", progress);
@@ -240,41 +258,61 @@ async fn run_interactive_test_generation(
             if let Some(handle) = &onchain_handle {
                 if handle.is_finished() {
                     if let Some(handle) = onchain_handle.take() {
-                        if let Ok(Ok(metadata)) = handle.await {
-                            progress = 1.0;
-                            test_metadata = Some(metadata.clone());
-                            state = AppState::Complete;
-                            if !test_files_generated {
-                                test_files_generated = true;
-                                let final_output = if let Some(anchor_dir) = anchor_test_dir {
-                                    anchor_dir.clone()
-                                } else {
-                                    output.clone()
-                                };
-                                if let Err(e) = fs::create_dir_all(&final_output) {
-                                    error_msg = Some(
-                                        format!(
-                                            "Failed to create output directory: {:?}: {}",
-                                            final_output,
-                                            e
-                                        )
-                                    );
-                                    state = AppState::Error(error_msg.as_ref().unwrap().clone());
-                                } else {
-                                    match generate_with_tera(&metadata, &idl_data, &final_output) {
-                                        Ok(_) => {
-                                            info!("Test files generated successfully!");
-                                        }
-                                        Err(e) => {
-                                            error_msg = Some(
-                                                format!("Failed to generate test files: {}", e)
-                                            );
-                                            state = AppState::Error(
-                                                error_msg.as_ref().unwrap().clone()
-                                            );
+                        match handle.await {
+                            Ok(Ok(metadata)) => {
+                                progress = 1.0;
+                                test_metadata = Some(metadata.clone());
+                                state = AppState::Complete;
+                                if !test_files_generated {
+                                    test_files_generated = true;
+                                    let final_output = if let Some(anchor_dir) = anchor_test_dir {
+                                        anchor_dir.clone()
+                                    } else {
+                                        output.clone()
+                                    };
+                                    if let Err(e) = fs::create_dir_all(&final_output) {
+                                        error_msg = Some(
+                                            format!(
+                                                "Failed to create output directory: {:?}: {}",
+                                                final_output,
+                                                e
+                                            )
+                                        );
+                                        state = AppState::Error(error_msg.as_ref().unwrap().clone());
+                                    } else {
+                                        match generate_with_tera(&metadata, &idl_data, &final_output) {
+                                            Ok(_) => {
+                                                info!("Test files generated successfully!");
+                                            }
+                                            Err(e) => {
+                                                error_msg = Some(
+                                                    format!("Failed to generate test files: {}", e)
+                                                );
+                                                state = AppState::Error(
+                                                    error_msg.as_ref().unwrap().clone()
+                                                );
+                                            }
                                         }
                                     }
                                 }
+                            }
+                            Ok(Err(e)) => {
+                                if is_program_too_large_error(&e) {
+                                    error_msg = Some(
+                                        "Your Anchor program is too large for on-chain processing.\n\
+                                        The IDL data or test metadata generation exceeds the available compute units or memory limits.\n\
+                                        Please wait for the next updates to generate tests for your program.".to_string()
+                                    );
+                                } else {
+                                    error_msg = Some(format!("On-chain processing failed: {}", e));
+                                }
+                                state = AppState::Error(error_msg.as_ref().unwrap().clone());
+                                progress = 0.0;
+                            }
+                            Err(e) => {
+                                error_msg = Some(format!("Task execution failed: {}", e));
+                                state = AppState::Error(error_msg.as_ref().unwrap().clone());
+                                progress = 0.0;
                             }
                         }
                     }
@@ -339,10 +377,67 @@ async fn run_interactive_test_generation(
     }
 
     if let Some(err) = error_msg {
-        anyhow::bail!("On-chain processing failed: {}", err);
+        // Check if it's already a user-friendly message or if we need to check the error
+        if err.contains("too large for on-chain processing") {
+            anyhow::bail!("{}", err);
+        } else {
+            anyhow::bail!("On-chain processing failed: {}", err);
+        }
     }
 
     Ok(())
+}
+
+fn process_offchain(
+    idl_data: &solify_common::IdlData,
+    execution_order: &Vec<String>,
+    program: &str,
+) -> Result<TestMetadata> {
+    let analyzer = DependencyAnalyzer::new();
+    analyzer.analyze_dependencies(idl_data, execution_order, program.to_string())
+        .map_err(|e| anyhow::anyhow!("Off-chain analysis failed: {}", e))
+}
+
+fn is_program_too_large_error(err: &anyhow::Error) -> bool {
+    // Check the full error chain (including context messages)
+    let err_str = err.to_string().to_lowercase();
+    
+    // Also check the root cause by iterating through the error chain
+    let mut current_err: Option<&dyn std::error::Error> = Some(err.as_ref());
+    let mut all_error_messages = vec![err_str];
+    
+    while let Some(e) = current_err {
+        all_error_messages.push(e.to_string().to_lowercase());
+        current_err = e.source();
+    }
+    
+    // Check all error messages in the chain
+    for msg in &all_error_messages {
+        if msg.contains("out of memory") ||
+           msg.contains("memory allocation failed") ||
+           (msg.contains("sbf program panicked") && 
+            (msg.contains("memory") || msg.contains("allocation") || 
+             msg.contains("out of"))) ||
+           (msg.contains("program failed to complete") && 
+            (msg.contains("memory") || msg.contains("allocation") || 
+             msg.contains("out of"))) ||
+           msg.contains("compute budget exceeded") ||
+           msg.contains("insufficient compute units") ||
+           // Check transaction simulation failures with memory-related issues
+           (msg.contains("transaction simulation failed") &&
+            (msg.contains("memory") || msg.contains("allocation") || 
+             msg.contains("out of") || 
+             (msg.contains("panicked") && (msg.contains("memory") || msg.contains("allocation"))))) ||
+           // Also check for generic transaction failures that might indicate size issues
+           (msg.contains("failed to send solify transaction") &&
+            (msg.contains("memory") || msg.contains("allocation") || 
+             msg.contains("panicked") || msg.contains("out of")))
+        {
+            return true;
+        }
+    }
+    
+    false
 }
 
 async fn process_onchain(
@@ -353,100 +448,187 @@ async fn process_onchain(
     wallet_path: &PathBuf,
     paraphrase: &str
 ) -> Result<TestMetadata> {
-    let wallet_data = fs::read_to_string(&wallet_path)?;
-    let wallet_bytes: Vec<u8> = serde_json::from_str(&wallet_data)?;
+    let wallet_data = fs::read_to_string(&wallet_path)
+        .with_context(|| format!("Failed to read wallet file: {:?}", wallet_path))?;
+    let wallet_bytes: Vec<u8> = serde_json::from_str(&wallet_data)
+        .with_context(|| format!("Failed to parse wallet JSON: {:?}", wallet_path))?;
+    
+    if wallet_bytes.len() < 32 {
+        return Err(anyhow::anyhow!(
+            "Invalid wallet keypair: expected at least 32 bytes, got {}",
+            wallet_bytes.len()
+        ));
+    }
+    
     let mut secret_key = [0u8; 32];
     secret_key.copy_from_slice(&wallet_bytes[..32]);
     let wallet_keypair = Keypair::new_from_array(secret_key);
 
     let user_pubkey = wallet_keypair.pubkey();
 
-    let program_id = Pubkey::from_str(&program)?;
-    let client = SolifyClient::new_with_commitment(rpc_url, CommitmentConfig::confirmed())?;
+    let program_id = Pubkey::from_str(&program)
+        .with_context(|| format!("Invalid program ID: {}", program))?;
+    let client = SolifyClient::new_with_commitment(rpc_url, CommitmentConfig::confirmed())
+        .with_context(|| format!("Failed to create Solify client for RPC: {}", rpc_url))?;
 
-    let idl_storage = client.fetch_idl_storage(user_pubkey, program_id)?;
+    let idl_storage = client.fetch_idl_storage(user_pubkey, program_id)
+        .with_context(|| "Failed to fetch IDL storage account")?;
     if idl_storage.is_some() {
-        let _update_idl_sig = client.update_idl_data(&wallet_keypair, program_id, &idl_data)?;
+        let update_result = client.update_idl_data(&wallet_keypair, program_id, &idl_data)
+            .with_context(|| "Failed to update IDL data on-chain");
+        
+        if let Err(ref e) = update_result {
+            if is_program_too_large_error(e) {
+                return Err(anyhow::anyhow!(
+                    "Your Anchor program is too large for on-chain processing.\n\
+                    The IDL data exceeds the available compute units or memory limits.\n\
+                    Please wait for the next updates to generate tests for your program.\n\
+                    \n\
+                    Error details: {}",
+                    e
+                ));
+            }
+        }
+        
+        let _update_idl_sig = update_result?;
 
         tokio::time::sleep(Duration::from_secs(5)).await;
         
-        let idl_storage = client.fetch_idl_storage(user_pubkey, program_id)?;
+        let idl_storage = client.fetch_idl_storage(user_pubkey, program_id)
+            .with_context(|| "Failed to verify IDL storage after update")?;
         if idl_storage.is_none() {
-            return Err(anyhow::anyhow!("Failed to fetch IDL data after update operation"));
+            return Err(anyhow::anyhow!(
+                "IDL storage account not found after update. The update transaction may have failed. \
+                Please check the transaction signature and verify the program is deployed correctly."
+            ));
         }
         
-        let existing_metadata = client.fetch_test_metadata(user_pubkey, program_id, paraphrase)?;
+        let existing_metadata = client.fetch_test_metadata(user_pubkey, program_id, paraphrase)
+            .with_context(|| "Failed to check for existing test metadata")?;
         if existing_metadata.is_none() {
-            let _test_metadata_sig = client.generate_metadata(
+            let generate_result = client.generate_metadata(
                 &wallet_keypair,
                 program_id,
                 execution_order.clone(),
                 paraphrase,
                 program.to_string()
-            )?;
+            ).with_context(|| "Failed to generate test metadata on-chain");
+            
+            if let Err(ref e) = generate_result {
+                if is_program_too_large_error(e) {
+                    return Err(anyhow::anyhow!(
+                        "Your Anchor program is too large for on-chain processing.\n\
+                        The test metadata generation exceeds the available compute units or memory limits.\n\
+                        Please wait for the next updates to generate tests for your program.\n\
+                        \n\
+                        Error details: {}",
+                        e
+                    ));
+                }
+            }
+            
+            let _test_metadata_sig = generate_result?;
         } else {
-            let _update_test_metadata_sig = client.generate_metadata(
+            let update_result = client.generate_metadata(
                 &wallet_keypair,
                 program_id,
                 execution_order.clone(),
                 paraphrase,
                 program.to_string()
-            )?;
+            ).with_context(|| "Failed to update test metadata on-chain");
+            
+            if let Err(ref e) = update_result {
+                if is_program_too_large_error(e) {
+                    return Err(anyhow::anyhow!(
+                        "Your Anchor program is too large for on-chain processing.\n\
+                        The test metadata generation exceeds the available compute units or memory limits.\n\
+                        Please wait for the next updates to generate tests for your program.\n\
+                        \n\
+                        Error details: {}",
+                        e
+                    ));
+                }
+            }
+            
+            let _update_test_metadata_sig = update_result?;
         }
 
         tokio::time::sleep(Duration::from_secs(5)).await;
-        let mut retries = 5;
-        let mut test_metadata_account = None;
-        while retries > 0 {
-            test_metadata_account = client.fetch_test_metadata(
+        
+        let test_metadata_account = client.fetch_test_metadata(
             user_pubkey,
             program_id,
             paraphrase
-        )?;
-            if test_metadata_account.is_some() {
-                break;
-            }
-            retries -= 1;
-            tokio::time::sleep(Duration::from_millis(500)).await;
-        }
+        ).with_context(|| "Failed to fetch test metadata from on-chain account")?;
         
-        if let Some(test_metadata_account) = test_metadata_account {
-            return Ok(test_metadata_account.test_metadata);
-        } else {
-            return Err(anyhow::anyhow!("Failed to fetch test metadata account after operation. The transaction may have failed or the account may not be ready yet."));
+        match test_metadata_account {
+            Some(account) => Ok(account.test_metadata),
+            None => {
+                Err(anyhow::anyhow!(
+                    "Test metadata account not found. The transaction may have failed. \
+                    Please check the transaction signature and verify the program is deployed correctly."
+                ))
+            }
         }
     } else {
-        let _store_idl_sig = client.store_idl_data(&wallet_keypair, program_id, &idl_data)?;
+        let store_result = client.store_idl_data(&wallet_keypair, program_id, &idl_data)
+            .with_context(|| "Failed to store IDL data on-chain");
+        
+        if let Err(ref e) = store_result {
+            if is_program_too_large_error(e) {
+                return Err(anyhow::anyhow!(
+                    "Your Anchor program is too large for on-chain processing.\n\
+                    The IDL data exceeds the available compute units or memory limits.\n\
+                    Please wait for the next updates to generate tests for your program.\n\
+                    \n\
+                    Error details: {}",
+                    e
+                ));
+            }
+        }
+        
+        let _store_idl_sig = store_result?;
         tokio::time::sleep(Duration::from_secs(2)).await;
         
-        let _test_metadata_sig = client.generate_metadata(
+        let generate_result = client.generate_metadata(
             &wallet_keypair,
             program_id,
             execution_order.clone(),
             paraphrase,
             program.to_string()
-        )?;
-    
-        tokio::time::sleep(Duration::from_secs(2)).await;
-        let mut retries = 5;
-        let mut test_metadata_account = None;
-        while retries > 0 {
-            test_metadata_account = client.fetch_test_metadata(
-                user_pubkey,
-                program_id,
-                paraphrase
-            )?;
-            if test_metadata_account.is_some() {
-                break;
+        ).with_context(|| "Failed to generate test metadata on-chain");
+        
+        if let Err(ref e) = generate_result {
+            if is_program_too_large_error(e) {
+                return Err(anyhow::anyhow!(
+                    "Your Anchor program is too large for on-chain processing.\n\
+                    The test metadata generation exceeds the available compute units or memory limits.\n\
+                    Please wait for the next updates to generate tests for your program.\n\
+                    \n\
+                    Error details: {}",
+                    e
+                ));
             }
-            retries -= 1;
-            tokio::time::sleep(Duration::from_millis(500)).await;
         }
         
-        if let Some(test_metadata_account) = test_metadata_account {
-            return Ok(test_metadata_account.test_metadata);
-        } else {
-            return Err(anyhow::anyhow!("Failed to fetch test metadata account after operation. The transaction may have failed or the account may not be ready yet."));
+        let _test_metadata_sig = generate_result?;
+    
+        tokio::time::sleep(Duration::from_secs(2)).await;
+        
+        let test_metadata_account = client.fetch_test_metadata(
+            user_pubkey,
+            program_id,
+            paraphrase
+        ).with_context(|| "Failed to fetch test metadata from on-chain account")?;
+        
+        match test_metadata_account {
+            Some(account) => Ok(account.test_metadata),
+            None => {
+                Err(anyhow::anyhow!(
+                    "Test metadata account not found. The transaction may have failed. \
+                    Please check the transaction signature and verify the program is deployed correctly."
+                ))
+            }
         }
     }
 }

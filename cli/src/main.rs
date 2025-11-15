@@ -29,10 +29,12 @@ enum Commands {
         signature: String,
     },
     GenTest {
-        #[arg(short, long, default_value = "target/idl")]
+        #[arg(short, long, default_value = "target/idl", help = "Path to IDL file or directory containing IDL files")]
         idl: PathBuf,
-        #[arg(short = 'o', long, default_value = "tests")]
+        #[arg(short = 'o', long, default_value = "tests", help = "Output directory for generated test files")]
         output: PathBuf,
+        #[arg(long, help = "Use off-chain computation instead of on-chain processing")]
+        off: bool,
     }
 }
 
@@ -52,8 +54,8 @@ async fn main() -> Result<()> {
         } => {
             inspect::execute(signature, &cli.rpc_url).await?;
         }
-        Commands::GenTest { idl, output } => {
-            gen_test::execute(idl,output, &cli.rpc_url).await?;
+        Commands::GenTest { idl, output, off } => {
+            gen_test::execute(idl, output, &cli.rpc_url, off).await?;
         }
     }
     Ok(())

@@ -1,8 +1,8 @@
   =======================================
   Metadata generated successfully for idl3
   Test metadata config: TestMetadataConfig {
-    authority: EqfGcLj56qzQpTtFJVBWx2E1g7FRWsMKdQx7iQDKyPs6,
-    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    authority: Dcb7z9Snn8yxvQWd1AQBNyoWyJ7gjwN7tGQZPZjNr4SD,
+    program_id: 7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa,
     paraphrase: "greeting_program",
     program_name: "test_for_idl1",
     test_metadata: TestMetadata {
@@ -80,7 +80,7 @@
                                 argument_name: "message",
                                 value_type: Invalid {
                                     description: "\"\"",
-                                    reason: "String cannot be empty",
+                                    reason: "String cannot be emp",
                                 },
                             },
                         ],
@@ -99,7 +99,7 @@
                                 argument_name: "message",
                                 value_type: Invalid {
                                     description: "\"a\".repeat(1000)",
-                                    reason: "Exceeds maximum length",
+                                    reason: "Exceeds maximum leng",
                                 },
                             },
                         ],

@@ -9,7 +9,7 @@ use solify_parser::{parse_idl, get_pda_accounts, get_signer_accounts, get_writab
 fn main() {
     println!("=== Solify IDL Parser ===\n");
     
-    let idl_path = concat!(env!("CARGO_MANIFEST_DIR"), "/idls/counter_program.json");
+    let idl_path = concat!(env!("CARGO_MANIFEST_DIR"), "/idls/voting_dapp.json");
     
     println!(" Reading IDL from: {}", idl_path);
     
@@ -143,13 +143,12 @@ fn main() {
     // println!("On chain analysis:");
     // println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━--------------------");
 
-    // let execution_order: [String; 4] = [
-    //     String::from("initialize"),
-    //     String::from("increment"), 
-    //     String::from("decrement"), 
-    //     String::from("set")
+    // let execution_order: [String; 3] = [
+    //     String::from("initialize_poll"),
+    //     String::from("initialize_candidate"), 
+    //     String::from("vote")
     // ];
-    // let program_id: String = String::from("FBiayQZWoTdQFUvPk1WJZUJqFLh9eLke89xGaFHCpAfN");
+    // let program_id: String = String::from("5hJg5ha5iZybqf9gdPW9tXrxUf8kDAx1jkeL1sCzHDF2");
 
     // let analyzer = DependencyAnalyzer::new();
     // let tests = analyzer.analyze_dependencies(&idl_data, &execution_order, program_id).unwrap();

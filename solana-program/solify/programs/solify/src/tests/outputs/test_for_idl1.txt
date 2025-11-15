@@ -1,8 +1,8 @@
   =======================================
   Metadata generated successfully for idl1
   Test metadata config: TestMetadataConfig {
-    authority: 2EK2HTV814LkSdHWG1oEdWELuQ4bBLwrfAy61jH7AjfW,
-    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    authority: sqspUP7VtL11atGPrpAioDU1RLnfuE8drpSpkUKgsch,
+    program_id: 7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa,
     paraphrase: "journal",
     program_name: "test_for_idl1",
     test_metadata: TestMetadata {
@@ -152,7 +152,7 @@
                                 argument_name: "title",
                                 value_type: Invalid {
                                     description: "\"\"",
-                                    reason: "String cannot be empty",
+                                    reason: "String cannot be emp",
                                 },
                             },
                         ],
@@ -171,7 +171,7 @@
                                 argument_name: "title",
                                 value_type: Invalid {
                                     description: "\"a\".repeat(1000)",
-                                    reason: "Exceeds maximum length",
+                                    reason: "Exceeds maximum leng",
                                 },
                             },
                         ],
@@ -190,7 +190,7 @@
                                 argument_name: "message",
                                 value_type: Invalid {
                                     description: "\"\"",
-                                    reason: "String cannot be empty",
+                                    reason: "String cannot be emp",
                                 },
                             },
                         ],
@@ -209,7 +209,7 @@
                                 argument_name: "message",
                                 value_type: Invalid {
                                     description: "\"a\".repeat(1000)",
-                                    reason: "Exceeds maximum length",
+                                    reason: "Exceeds maximum leng",
                                 },
                             },
                         ],
@@ -228,14 +228,14 @@
                                 argument_name: "title",
                                 value_type: Invalid {
                                     description: "invalid",
-                                    reason: "Multiple validation failures",
+                                    reason: "Multiple validation ",
                                 },
                             },
                             TestArgumentValue {
                                 argument_name: "message",
                                 value_type: Invalid {
                                     description: "invalid",
-                                    reason: "Multiple validation failures",
+                                    reason: "Multiple validation ",
                                 },
                             },
                         ],
@@ -315,7 +315,7 @@
                                 argument_name: "title",
                                 value_type: Invalid {
                                     description: "\"\"",
-                                    reason: "String cannot be empty",
+                                    reason: "String cannot be emp",
                                 },
                             },
                         ],
@@ -334,7 +334,7 @@
                                 argument_name: "title",
                                 value_type: Invalid {
                                     description: "\"a\".repeat(1000)",
-                                    reason: "Exceeds maximum length",
+                                    reason: "Exceeds maximum leng",
                                 },
                             },
                         ],
@@ -353,7 +353,7 @@
                                 argument_name: "message",
                                 value_type: Invalid {
                                     description: "\"\"",
-                                    reason: "String cannot be empty",
+                                    reason: "String cannot be emp",
                                 },
                             },
                         ],
@@ -372,7 +372,7 @@
                                 argument_name: "message",
                                 value_type: Invalid {
                                     description: "\"a\".repeat(1000)",
-                                    reason: "Exceeds maximum length",
+                                    reason: "Exceeds maximum leng",
                                 },
                             },
                         ],
@@ -391,14 +391,14 @@
                                 argument_name: "title",
                                 value_type: Invalid {
                                     description: "invalid",
-                                    reason: "Multiple validation failures",
+                                    reason: "Multiple validation ",
                                 },
                             },
                             TestArgumentValue {
                                 argument_name: "message",
                                 value_type: Invalid {
                                     description: "invalid",
-                                    reason: "Multiple validation failures",
+                                    reason: "Multiple validation ",
                                 },
                             },
                         ],
@@ -457,7 +457,7 @@
                                 argument_name: "title",
                                 value_type: Invalid {
                                     description: "\"\"",
-                                    reason: "String cannot be empty",
+                                    reason: "String cannot be emp",
                                 },
                             },
                         ],
@@ -476,7 +476,7 @@
                                 argument_name: "title",
                                 value_type: Invalid {
                                     description: "\"a\".repeat(1000)",
-                                    reason: "Exceeds maximum length",
+                                    reason: "Exceeds maximum leng",
                                 },
                             },
                         ],

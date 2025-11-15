@@ -1,8 +1,8 @@
   =======================================
   Metadata generated successfully for idl5
   Test metadata config: TestMetadataConfig {
-    authority: FW9TdRApNTEHHZXF3565VSxaG1tertRYV8QHVysbh9p7,
-    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    authority: C4Q5oo7cKLzb1K65xKLMFkUVHNBhw1SJ96Vu9iBJy1n5,
+    program_id: 7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa,
     paraphrase: "token_vault",
     program_name: "test_for_idl1",
     test_metadata: TestMetadata {
@@ -157,7 +157,7 @@
                                 argument_name: "amount",
                                 value_type: Invalid {
                                     description: "-1",
-                                    reason: "Below minimum value of 0",
+                                    reason: "Below minimum value ",
                                 },
                             },
                         ],
@@ -195,7 +195,7 @@
                                 argument_name: "amount",
                                 value_type: Invalid {
                                     description: "u64::MAX",
-                                    reason: "Potential arithmetic overflow",
+                                    reason: "Potential arithmetic",
                                 },
                             },
                         ],
@@ -214,7 +214,7 @@
                                 argument_name: "amount",
                                 value_type: Invalid {
                                     description: "-1",
-                                    reason: "Unsigned type cannot be negative",
+                                    reason: "Unsigned type cannot",
                                 },
                             },
                         ],

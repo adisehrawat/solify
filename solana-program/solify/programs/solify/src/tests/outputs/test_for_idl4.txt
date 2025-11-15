@@ -1,8 +1,8 @@
   =======================================
   Metadata generated successfully for idl4
   Test metadata config: TestMetadataConfig {
-    authority: H3oVazB4uTaLGJHCP5L2mNgmfFMx8v7wxGkkbF35ad3j,
-    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    authority: 4zBDdEiYAJcUbYFxCPbp8TvNprkPz6ajuACkn3N3vVon,
+    program_id: 7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa,
     paraphrase: "mini_escrow",
     program_name: "test_for_idl1",
     test_metadata: TestMetadata {
@@ -139,7 +139,7 @@
                                 argument_name: "amount",
                                 value_type: Invalid {
                                     description: "-1",
-                                    reason: "Below minimum value of 0",
+                                    reason: "Below minimum value ",
                                 },
                             },
                         ],
@@ -177,7 +177,7 @@
                                 argument_name: "amount",
                                 value_type: Invalid {
                                     description: "u64::MAX",
-                                    reason: "Potential arithmetic overflow",
+                                    reason: "Potential arithmetic",
                                 },
                             },
                         ],
@@ -196,7 +196,7 @@
                                 argument_name: "amount",
                                 value_type: Invalid {
                                     description: "-1",
-                                    reason: "Unsigned type cannot be negative",
+                                    reason: "Unsigned type cannot",
                                 },
                             },
                         ],

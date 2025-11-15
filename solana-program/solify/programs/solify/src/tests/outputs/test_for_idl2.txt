@@ -1,8 +1,8 @@
   =======================================
   Metadata generated successfully for idl2
   Test metadata config: TestMetadataConfig {
-    authority: 9aSK3V5VTK3yqZDnFs29o8bF7dWRM8d3P2B5AsjhbgrB,
-    program_id: 4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb,
+    authority: 6PRWoxkLJ6ig8TPYCqqtLd3cj7cgRPoXq9E39K6AopzU,
+    program_id: 7tvJ6jxJF81pozUSa2o8yPo6zsQCxG4GyF2b6JgaHqaa,
     paraphrase: "counter_program",
     program_name: "test_for_idl1",
     test_metadata: TestMetadata {
