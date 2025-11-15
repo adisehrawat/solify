@@ -53,8 +53,8 @@ shellexpand = "3.1"
 
 # Internal dependencies (use path for development, version for publishing)
 # When publishing, change these to: solify-common = "0.1.0", etc.
-solify-common = { path = "../common" }
-solify-parser = { path = "../parser" }
-solify-generator = { path = "../generator" }
-solify-client = { path = "../client" }
+solify-common = "0.1.0"
+solify-parser = "0.1.0"
+solify-generator = "0.1.0"
+solify-client = "0.1.0"
 
