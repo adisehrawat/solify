@@ -22,7 +22,7 @@ thiserror = "1.0"
 anyhow = "1.0"
 
 # Common types
-solify-common = { path = "../common" }
+solify-common = "0.1.0"
 
 # Analyzer
-solify-analyzer = { path = "../analyzer" }
+solify-analyzer = "0.1.0"
