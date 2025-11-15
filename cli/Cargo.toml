@@ -1,6 +1,6 @@
 [package]
 name = "solify"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Aditya Sehrawat <sehrawataditya22@gmail.com>"] 
 description = "A CLI tool to generate anchor program tests for Solana"
@@ -55,7 +55,7 @@ shellexpand = "3.1"
 # When publishing, change these to: solify-common = "0.1.0", etc.
 solify-common = "0.1.0"
 solify-parser = "0.1.0"
-solify-generator = "0.1.0"
+solify-generator = "0.1.1"
 solify-client = "0.1.0"
 solify-analyzer = "0.1.0"
 
