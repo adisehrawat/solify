@@ -1,7 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Solify } from "../target/types/solify";
-import { PublicKey, Keypair, SystemProgram, LAMPORTS_PER_SOL, ComputeBudgetProgram } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  ComputeBudgetProgram,
+} from "@solana/web3.js";
 import { assert } from "chai";
 
 type IdlSeed = {
@@ -82,599 +88,720 @@ describe("solify", () => {
 
   const program = anchor.workspace.solify as Program<Solify>;
   const connection = provider.connection;
-  
 
-const user = provider.wallet;
-  const userPubkey = user.publicKey;
+  const user1 = Keypair.generate();
+  const userPubkey = user1.publicKey;
 
-  let userPda: PublicKey;
-  let testMetadataPda: PublicKey;
-  let idlStoragePda: PublicKey;
+  let journal_testMetadataPda: PublicKey;
+  let journal_idlStoragePda: PublicKey;
+  let counter_testMetadataPda: PublicKey;
+  let counter_idlStoragePda: PublicKey;
+  let message_testMetadataPda: PublicKey;
+  let message_idlStoragePda: PublicKey;
+  let vault_testMetadataPda: PublicKey;
+  let vault_idlStoragePda: PublicKey;
 
-  const idlData = {
-    name: "journal",
-    version: "0.1.0",
-    instructions: [
-      {
-        name: "create_journal_entry",
-        accounts: [
-          {
-            name: "journal_entry",
-            isMut: true,
-            isSigner: false,
-            isOptional: false,
-            docs: [],
-            pda: {
-              seeds: [
-                {
-                  kind: "arg",
-                  path: "title",
-                  value: "",
-                },
-                {
-                  kind: "account",
-                  path: "owner",
-                  value: "",
-                },
-              ],
-              program: "",
-            },
-          },
-          {
-            name: "owner",
-            isMut: true,
-            isSigner: true,
-            isOptional: false,
-            docs: [],
-            pda: null,
-          },
-          {
-            name: "system_program",
-            isMut: false,
-            isSigner: false,
-            isOptional: false,
-            docs: [],
-            pda: null,
-          },
-        ],
-        args: [
-          {
-            name: "title",
-            fieldType: "string",
-          },
-          {
-            name: "message",
-            fieldType: "string",
-          },
-        ],
-        docs: [],
-      },
-      {
-        name: "delete_journal_entry",
-        accounts: [
-          {
-            name: "journal_entry",
-            isMut: true,
-            isSigner: false,
-            isOptional: false,
-            docs: [],
-            pda: {
-              seeds: [
-                {
-                  kind: "arg",
-                  path: "title",
-                  value: "",
-                },
-                {
-                  kind: "account",
-                  path: "owner",
-                  value: "",
-                },
-              ],
-              program: "",
-            },
-          },
-          {
-            name: "owner",
-            isMut: true,
-            isSigner: true,
-            isOptional: false,
-            docs: [],
-            pda: null,
-          },
-          {
-            name: "system_program",
-            isMut: false,
-            isSigner: false,
-            isOptional: false,
-            docs: [],
-            pda: null,
-          },
-        ],
-        args: [
-          {
-            name: "title",
-            fieldType: "string",
-          },
-        ],
-        docs: [],
-      },
-      {
-        name: "update_journal_entry",
-        accounts: [
-          {
-            name: "journal_entry",
-            isMut: true,
-            isSigner: false,
-            isOptional: false,
-            docs: [],
-            pda: {
-              seeds: [
-                {
-                  kind: "arg",
-                  path: "title",
-                  value: "",
-                },
-                {
-                  kind: "account",
-                  path: "owner",
-                  value: "",
-                },
-              ],
-              program: "",
-            },
-          },
-          {
-            name: "owner",
-            isMut: true,
-            isSigner: true,
-            isOptional: false,
-            docs: [],
-            pda: null,
-          },
-          {
-            name: "system_program",
-            isMut: false,
-            isSigner: false,
-            isOptional: false,
-            docs: [],
-            pda: null,
-          },
-        ],
-        args: [
-          {
-            name: "title",
-            fieldType: "string",
-          },
-          {
-            name: "message",
-            fieldType: "string",
-          },
-        ],
-        docs: [],
-      },
-    ],
-    accounts: [
-      {
-        name: "JournalEntryState",
-        fields: [],
-      },
-    ],
-    types: [
-      {
-        name: "JournalEntryState",
-        kind: "struct",
-        fields: [
-          "owner",
-          "title",
-          "message",
-        ],
-      },
-    ],
-    errors: [],
-    constants: [],
-    events: [],
-  };
-
-  const programId = new PublicKey("4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb");
-  const programName = "journal";
-  const executionOrder = ["create_journal_entry", "update_journal_entry", "delete_journal_entry"];
-  const paraphrase = "test_paraphrase1";
 
   console.log("userPubkey", userPubkey.toBase58());
+  before(async () => {
 
-//   before(async () => {
-//     await connection.requestAirdrop(userPubkey, 10 * LAMPORTS_PER_SOL);
-//     console.log("user balance", await connection.getBalance(userPubkey));
-    
-
-//     [userPda] = PublicKey.findProgramAddressSync([Buffer.from("user_config"), userPubkey.toBuffer()], program.programId);
-//     [testMetadataPda] = PublicKey.findProgramAddressSync([Buffer.from("tests_metadata"), programId.toBuffer(), userPubkey.toBuffer(), Buffer.from(paraphrase)], program.programId);
-//     [idlStoragePda] = PublicKey.findProgramAddressSync([Buffer.from("idl_storage"), programId.toBuffer(), userPubkey.toBuffer()], program.programId);
-//   });
-
-//   describe("journal IDL testing", async () => {
-
-    // it("should store idl data", async () => {
-    //   const tx = await program.methods
-    //     .storeIdlData(idlData, programId)
-    //     .accountsStrict({
-    //       idlStorage: idlStoragePda,
-    //       authority: userPubkey,
-    //       systemProgram: SystemProgram.programId,
-    //     })
-    //     .rpc();
-    //   console.log("tx", tx);
-    //   console.log("IDL pda: ",idlStoragePda.toBase58());
-    // });
-
-    // it("should generate metadata", async () => {
-    //   const tx = await program.methods
-    //     .generateMetadata(executionOrder, programId, programName)
-    //     .accountsStrict({
-    //       idlStorage: idlStoragePda,
-    //       testMetadataConfig: testMetadataPda,
-    //       authority: userPubkey,
-    //       systemProgram: SystemProgram.programId,
-    //     })
-    //     .rpc();
-    //     console.log("tx", tx);
-
-    //     const testMetadata = await program.account.testMetadataConfig.fetch(testMetadataPda);
-    //     console.log("testMetadata", JSON.stringify(testMetadata, null, 2));
-    // });
-
-//     it("should update idl data", async () => {
-//       const updatedIdlData = {
-//         ...idlData,
-//         version: "0.2.0"
-//       };
-//       const tx = await program.methods
-//         .updateIdlData(updatedIdlData, programId)
-//         .accountsStrict({
-//           idlStorage: idlStoragePda,
-//           authority: userPubkey,
-//           systemProgram: SystemProgram.programId,
-//         })
-//         .rpc();
-//         console.log("signature: ", tx);
-//         console.log("IDL pda: ",idlStoragePda.toBase58());
-//     });
-
-//     it("should generate metadata", async () => {
-//       const tx = await program.methods
-//         .generateMetadata(executionOrder, programId, programName, paraphrase)
-//         .accountsStrict({
-//           idlStorage: idlStoragePda,
-//           testMetadataConfig: testMetadataPda,
-//           authority: userPubkey,
-//           systemProgram: SystemProgram.programId,
-//         })
-//         .rpc();
-//       console.log("tx", tx);
-
-//       const testMetadata = await program.account.testMetadataConfig.fetch(testMetadataPda);
-//       console.log("testMetadata", JSON.stringify(testMetadata, null, 2));
-//     });
-//   });
-
-  describe("voting_dapp IDL testing", async () => {
-    const votingDappProgramId = new PublicKey("5hJg5ha5iZybqf9gdPW9tXrxUf8kDAx1jkeL1sCzHDF2");
-    const votingDappProgramName = "voting_dapp";
-    const votingDappExecutionOrder = ["initialize_poll", "initialize_candidate", "vote"];
-    const votingDappParaphrase = "asdfg";
-
-    let votingDappTestMetadataPda: PublicKey;
-    let votingDappIdlStoragePda: PublicKey;
-
-    const votingDappIdlData: IdlData = {
-      name: "voting_dapp",
-      version: "0.1.0",
-      instructions: [
-        {
-          name: "initialize_candidate",
-          accounts: [
-            {
-              name: "signer",
-              isMut: true,
-              isSigner: true,
-              isOptional: false,
-              docs: [],
-              pda: null,
-            },
-            {
-              name: "poll",
-              isMut: true,
-              isSigner: false,
-              isOptional: false,
-              docs: [],
-              pda: {
-                seeds: [
-                  {
-                    kind: "arg",
-                    path: "poll_id",
-                    value: "",
-                  },
-                ],
-                program: "",
-              },
-            },
-            {
-              name: "candidate",
-              isMut: true,
-              isSigner: false,
-              isOptional: false,
-              docs: [],
-              pda: {
-                seeds: [
-                  {
-                    kind: "arg",
-                    path: "poll_id",
-                    value: "",
-                  },
-                  {
-                    kind: "arg",
-                    path: "candidate_name",
-                    value: "",
-                  },
-                ],
-                program: "",
-              },
-            },
-            {
-              name: "system_program",
-              isMut: false,
-              isSigner: false,
-              isOptional: false,
-              docs: [],
-              pda: null,
-            },
-          ],
-          args: [
-            {
-              name: "_poll_id",
-              fieldType: "u64",
-            },
-            {
-              name: "candidate_name",
-              fieldType: "string",
-            },
-          ],
-          docs: [],
-        },
-        {
-          name: "initialize_poll",
-          accounts: [
-            {
-              name: "signer",
-              isMut: true,
-              isSigner: true,
-              isOptional: false,
-              docs: [],
-              pda: null,
-            },
-            {
-              name: "poll",
-              isMut: true,
-              isSigner: false,
-              isOptional: false,
-              docs: [],
-              pda: {
-                seeds: [
-                  {
-                    kind: "arg",
-                    path: "poll_id",
-                    value: "",
-                  },
-                ],
-                program: "",
-              },
-            },
-            {
-              name: "system_program",
-              isMut: false,
-              isSigner: false,
-              isOptional: false,
-              docs: [],
-              pda: null,
-            },
-          ],
-          args: [
-            {
-              name: "poll_id",
-              fieldType: "u64",
-            },
-            {
-              name: "description",
-              fieldType: "string",
-            },
-            {
-              name: "poll_start",
-              fieldType: "u64",
-            },
-            {
-              name: "poll_end",
-              fieldType: "u64",
-            },
-          ],
-          docs: [],
-        },
-        {
-          name: "vote",
-          accounts: [
-            {
-              name: "signer",
-              isMut: false,
-              isSigner: true,
-              isOptional: false,
-              docs: [],
-              pda: null,
-            },
-            {
-              name: "poll",
-              isMut: false,
-              isSigner: false,
-              isOptional: false,
-              docs: [],
-              pda: {
-                seeds: [
-                  {
-                    kind: "arg",
-                    path: "poll_id",
-                    value: "",
-                  },
-                ],
-                program: "",
-              },
-            },
-            {
-              name: "candidate",
-              isMut: true,
-              isSigner: false,
-              isOptional: false,
-              docs: [],
-              pda: {
-                seeds: [
-                  {
-                    kind: "arg",
-                    path: "poll_id",
-                    value: "",
-                  },
-                  {
-                    kind: "arg",
-                    path: "candidate_name",
-                    value: "",
-                  },
-                ],
-                program: "",
-              },
-            },
-          ],
-          args: [
-            {
-              name: "_candidate_name",
-              fieldType: "string",
-            },
-            {
-              name: "_poll_id",
-              fieldType: "u64",
-            },
-          ],
-          docs: [],
-        },
-      ],
-      accounts: [
-        {
-          name: "Candidate",
-          fields: [],
-        },
-        {
-          name: "Poll",
-          fields: [],
-        },
-      ],
-      types: [
-        {
-          name: "Candidate",
-          kind: "struct",
-          fields: [
-            "candidate_name",
-            "candidate_votes",
-          ],
-        },
-        {
-          name: "Poll",
-          kind: "struct",
-          fields: [
-            "poll_id",
-            "description",
-            "poll_start",
-            "poll_end",
-            "candidate_amount",
-          ],
-        },
-      ],
-      errors: [],
-      constants: [],
-      events: [],
-    };
-
-    before(async () => {
-      [votingDappTestMetadataPda] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("tests_metadata"),
-          votingDappProgramId.toBuffer(),
-          userPubkey.toBuffer(),
-          Buffer.from(votingDappParaphrase),
-        ],
-        program.programId
-      );
-      [votingDappIdlStoragePda] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("idl_storage"),
-          votingDappProgramId.toBuffer(),
-          userPubkey.toBuffer(),
-        ],
-        program.programId
-      );
-    });
-
-    it("should store voting_dapp idl data", async () => {
-      // Check if account already exists
-      const accountInfo = await connection.getAccountInfo(votingDappIdlStoragePda);
-      
-      let tx;
-      if (accountInfo === null) {
-        // Account doesn't exist, use storeIdlData
-        tx = await program.methods
-          .storeIdlData(votingDappIdlData, votingDappProgramId)
-          .accountsStrict({
-            idlStorage: votingDappIdlStoragePda,
-            authority: userPubkey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc();
-        console.log("voting_dapp store IDL tx:", tx);
-      } else {
-        // Account exists, use updateIdlData
-        tx = await program.methods
-          .updateIdlData(votingDappIdlData, votingDappProgramId)
-          .accountsStrict({
-            idlStorage: votingDappIdlStoragePda,
-            authority: userPubkey,
-            systemProgram: SystemProgram.programId,
-          })
-          .rpc();
-        console.log("voting_dapp update IDL tx:", tx);
-      }
-      console.log("voting_dapp IDL storage PDA:", votingDappIdlStoragePda.toBase58());
-    });
-
-    it("should generate voting_dapp metadata", async () => {
-      // Increase compute units to avoid out of memory errors
-      const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
-        units: 400000,
-      });
-      
-      const tx = await program.methods
-        .generateMetadata(
-          votingDappExecutionOrder,
-          votingDappProgramId,
-          votingDappProgramName,
-          votingDappParaphrase
-        )
-        .accountsStrict({
-          idlStorage: votingDappIdlStoragePda,
-          testMetadataConfig: votingDappTestMetadataPda,
-          authority: userPubkey,
-          systemProgram: SystemProgram.programId,
-        })
-        .preInstructions([modifyComputeUnits])
-        .rpc();
-      console.log("voting_dapp generate metadata tx:", tx);
-
-      const testMetadata = await program.account.testMetadataConfig.fetch(votingDappTestMetadataPda);
-      console.log("voting_dapp testMetadata", JSON.stringify(testMetadata, null, 2));
-    });
+    await new Promise((resolve) => setTimeout(resolve, 20000)); // wait for 20 seconds to airdrop SOL to user1
+    console.log("user1 balance", await connection.getBalance(userPubkey)/ LAMPORTS_PER_SOL);
   });
+
+
+  describe("Journal IDL testing", async () => {
+    const journal_programId = new PublicKey(
+        "4ZccwG28ne8hTmKLWDyDZmHw35su99iUxFRj5jy1p1Cb"
+      );
+      const journal_program_name = "journal";
+      const journal_executionOrder = [
+        "create_journal_entry",
+        "update_journal_entry",
+        "delete_journal_entry",
+      ];
+      const journal_idlData = {
+        name: "journal",
+        version: "0.1.0",
+        instructions: [
+          {
+            name: "create_journal_entry",
+            accounts: [
+              {
+                name: "journal_entry",
+                isMut: true,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: {
+                  seeds: [
+                    {
+                      kind: "arg",
+                      path: "title",
+                      value: "",
+                    },
+                    {
+                      kind: "account",
+                      path: "owner",
+                      value: "",
+                    },
+                  ],
+                  program: "",
+                },
+              },
+              {
+                name: "owner",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null,
+              },
+              {
+                name: "system_program",
+                isMut: false,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null,
+              },
+            ],
+            args: [
+              {
+                name: "title",
+                fieldType: "string",
+              },
+              {
+                name: "message",
+                fieldType: "string",
+              },
+            ],
+            docs: [],
+          },
+          {
+            name: "delete_journal_entry",
+            accounts: [
+              {
+                name: "journal_entry",
+                isMut: true,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: {
+                  seeds: [
+                    {
+                      kind: "arg",
+                      path: "title",
+                      value: "",
+                    },
+                    {
+                      kind: "account",
+                      path: "owner",
+                      value: "",
+                    },
+                  ],
+                  program: "",
+                },
+              },
+              {
+                name: "owner",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null,
+              },
+              {
+                name: "system_program",
+                isMut: false,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null,
+              },
+            ],
+            args: [
+              {
+                name: "title",
+                fieldType: "string",
+              },
+            ],
+            docs: [],
+          },
+          {
+            name: "update_journal_entry",
+            accounts: [
+              {
+                name: "journal_entry",
+                isMut: true,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: {
+                  seeds: [
+                    {
+                      kind: "arg",
+                      path: "title",
+                      value: "",
+                    },
+                    {
+                      kind: "account",
+                      path: "owner",
+                      value: "",
+                    },
+                  ],
+                  program: "",
+                },
+              },
+              {
+                name: "owner",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null,
+              },
+              {
+                name: "system_program",
+                isMut: false,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null,
+              },
+            ],
+            args: [
+              {
+                name: "title",
+                fieldType: "string",
+              },
+              {
+                name: "message",
+                fieldType: "string",
+              },
+            ],
+            docs: [],
+          },
+        ],
+        accounts: [
+          {
+            name: "JournalEntryState",
+            fields: [],
+          },
+        ],
+        types: [
+          {
+            name: "JournalEntryState",
+            kind: "struct",
+            fields: ["owner", "title", "message"],
+          },
+        ],
+        errors: [],
+        constants: [],
+        events: [],
+      };
+      const journal_pharaphase = "journal1";
+
+      before(async () => {
+        [journal_idlStoragePda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("idl_storage"), journal_programId.toBuffer(), userPubkey.toBuffer()],
+            program.programId
+          );
+          [journal_testMetadataPda] = PublicKey.findProgramAddressSync(
+            [
+              Buffer.from("tests_metadata"),
+              journal_programId.toBuffer(),
+              userPubkey.toBuffer(),
+              Buffer.from(journal_pharaphase),
+            ],
+            program.programId
+          );
+      })
+
+      it("should store journal IdlData on-chain", async () => {
+        const tx = await program.methods.storeIdlData(journal_idlData,journal_programId)
+            .accountsStrict({
+                idlStorage: journal_idlStoragePda,
+                authority: userPubkey,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([user1])
+            .rpc();
+            console.log(`tx is: https://explorer.solana.com/tx/${tx.toString()}?cluster=devnet`);
+            console.log("journal IDL storage PDA: ", journal_idlStoragePda.toBase58());
+      })
+      it("should generate journal metadata", async () => {
+        const tx = await program.methods.generateMetadata(journal_executionOrder, journal_programId, journal_program_name, journal_pharaphase)
+            .accountsStrict({
+                idlStorage: journal_idlStoragePda,
+                testMetadataConfig: journal_testMetadataPda,
+                authority: userPubkey,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([user1])
+            .rpc();
+
+
+      
+            console.log(`tx is: https://explorer.solana.com/tx/${tx.toString()}?cluster=devnet`);
+            console.log("journal testMetadata PDA: ", journal_testMetadataPda.toBase58());
+      })
+
+  })
+
+  describe("Counter IDL testing", async () => {
+    const counter_programId = new PublicKey(
+        "69ctt84hJMj9b8bChtsgUVufU11UEf2kqofsJUb39iaa"
+      );
+      const counter_program_name = "counter";
+      const counter_executionOrder = [
+        "initialize",
+        "increment",
+        "decrement",
+      ];
+      const counter_idlData = {
+        name: "counter",
+        version: "0.1.0",
+        instructions: [
+          {
+            name: "decrement",
+            accounts: [
+              {
+                name: "counter",
+                isMut: true,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null,
+              }
+            ],
+            args: [],
+            docs: [],
+          },
+          {
+            name: "increment",
+            accounts: [
+              {
+                name: "counter",
+                isMut: true,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null,
+              }
+            ],
+            args: [],
+            docs: [],
+          },
+          {
+            name: "initialize",
+            accounts: [
+              {
+                name: "counter",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null
+              },
+              {
+                name: "user",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null
+              },
+              {
+                name: "system_program",
+                isMut: false,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null
+              }
+            ],
+            args: [],
+            docs: []
+          }
+        ],
+        accounts: [
+          {
+            name: "Counter",
+            fields: []
+          }
+        ],
+        types: [
+          {
+            name: "Counter",
+            kind: "struct",
+            fields: ["count"]
+          }
+        ],
+        errors: [],
+        constants: [],
+        events: []
+      };
+      
+    
+      const counter_pharaphase = "counter1";
+
+      before(async () => {
+        [counter_idlStoragePda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("idl_storage"), counter_programId.toBuffer(), userPubkey.toBuffer()],
+            program.programId
+          );
+          [counter_testMetadataPda] = PublicKey.findProgramAddressSync(
+            [
+              Buffer.from("tests_metadata"),
+              counter_programId.toBuffer(),
+              userPubkey.toBuffer(),
+              Buffer.from(counter_pharaphase),
+            ],
+            program.programId
+          );
+      })
+
+      it("should store counter IdlData on-chain", async () => {
+        const tx = await program.methods.storeIdlData(counter_idlData,counter_programId)
+            .accountsStrict({
+                idlStorage: counter_idlStoragePda,
+                authority: userPubkey,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([user1])
+            .rpc();
+            console.log(`tx is: https://explorer.solana.com/tx/${tx.toString()}?cluster=devnet`);
+            console.log("counter IDL storage PDA: ", counter_idlStoragePda.toBase58());
+      })
+      it("should generate counter metadata", async () => {
+        const tx = await program.methods.generateMetadata(counter_executionOrder, counter_programId, counter_program_name, counter_pharaphase)
+            .accountsStrict({
+                idlStorage: counter_idlStoragePda,
+                testMetadataConfig: counter_testMetadataPda,
+                authority: userPubkey,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([user1])
+            .rpc();
+
+      
+            console.log(`tx is: https://explorer.solana.com/tx/${tx.toString()}?cluster=devnet`);
+            console.log("counter testMetadata PDA: ", counter_testMetadataPda.toBase58());
+      })
+
+  })
+
+  describe("Message IDL testing", async () => {
+    const message_programId = new PublicKey(
+        "Dpd54vhwUn6eq5RM6J1SgtrowTJTCJdxApu4nRtfh7av"
+      );
+      const message_program_name = "message";
+      const message_executionOrder = [
+        "initialize",
+        "update_message",
+      ];
+      const message_idlData = {
+        name: "message",
+        version: "0.1.0",
+        instructions: [
+          {
+            name: "initialize",
+            accounts: [
+              {
+                name: "board",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null
+              },
+              {
+                name: "user",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null
+              },
+              {
+                name: "system_program",
+                isMut: false,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null
+              }
+            ],
+            args: [
+              {
+                name: "message",
+                fieldType: "string"
+              }
+            ],
+            docs: []
+          },
+          {
+            name: "update_message",
+            accounts: [
+              {
+                name: "board",
+                isMut: true,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null
+              }
+            ],
+            args: [
+              {
+                name: "new_message",
+                fieldType: "string"
+              }
+            ],
+            docs: []
+          }
+        ],
+        accounts: [
+          {
+            name: "Board",
+            fields: []
+          }
+        ],
+        types: [
+          {
+            name: "Board",
+            kind: "struct",
+            fields: ["message"]
+          }
+        ],
+        errors: [],
+        constants: [],
+        events: []
+      };
+      
+      
+    
+      const message_pharaphase = "message1";
+
+      before(async () => {
+        [message_idlStoragePda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("idl_storage"), message_programId.toBuffer(), userPubkey.toBuffer()],
+            program.programId
+          );
+          [message_testMetadataPda] = PublicKey.findProgramAddressSync(
+            [
+              Buffer.from("tests_metadata"),
+              message_programId.toBuffer(),
+              userPubkey.toBuffer(),
+              Buffer.from(message_pharaphase),
+            ],
+            program.programId
+          );
+      })
+
+      it("should store message IdlData on-chain", async () => {
+        const tx = await program.methods.storeIdlData(message_idlData,message_programId)
+            .accountsStrict({
+                idlStorage: message_idlStoragePda,
+                authority: userPubkey,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([user1])
+            .rpc();
+            console.log(`tx is: https://explorer.solana.com/tx/${tx.toString()}?cluster=devnet`);
+            console.log("message IDL storage PDA: ", message_idlStoragePda.toBase58());
+      })
+      it("should generate message metadata", async () => {
+        const tx = await program.methods.generateMetadata(message_executionOrder, message_programId, message_program_name, message_pharaphase)
+            .accountsStrict({
+                idlStorage: message_idlStoragePda,
+                testMetadataConfig: message_testMetadataPda,
+                authority: userPubkey,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([user1])
+            .rpc();
+
+      
+            console.log(`tx is: https://explorer.solana.com/tx/${tx.toString()}?cluster=devnet`);
+            console.log("message testMetadata PDA: ", message_testMetadataPda.toBase58());
+      })
+
+  })
+
+  describe("Vault IDL testing", async () => {
+    const vault_programId = new PublicKey(
+        "B3mqUcr9rES8fYhtVd7ezYSotpTdM4Uzkv6Fp8nwCDV1"
+      );
+      const vault_program_name = "vault";
+      const vault_executionOrder = [
+        "initialize",
+        "deposit",
+        "withdraw",
+      ];
+      const vault_idlData = {
+        name: "vault",
+        version: "0.1.0",
+        instructions: [
+          {
+            name: "deposit",
+            accounts: [
+              {
+                name: "vault",
+                isMut: true,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null
+              },
+              {
+                name: "user",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null
+              }
+            ],
+            args: [
+              {
+                name: "amount",
+                fieldType: "u64"
+              }
+            ],
+            docs: []
+          },
+          {
+            name: "initialize",
+            accounts: [
+              {
+                name: "vault",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null
+              },
+              {
+                name: "user",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null
+              },
+              {
+                name: "system_program",
+                isMut: false,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null
+              }
+            ],
+            args: [],
+            docs: []
+          },
+          {
+            name: "withdraw",
+            accounts: [
+              {
+                name: "vault",
+                isMut: true,
+                isSigner: false,
+                isOptional: false,
+                docs: [],
+                pda: null
+              },
+              {
+                name: "user",
+                isMut: true,
+                isSigner: true,
+                isOptional: false,
+                docs: [],
+                pda: null
+              }
+            ],
+            args: [
+              {
+                name: "amount",
+                fieldType: "u64"
+              }
+            ],
+            docs: []
+          }
+        ],
+        accounts: [
+          {
+            name: "Vault",
+            fields: []
+          }
+        ],
+        types: [
+          {
+            name: "Vault",
+            kind: "struct",
+            fields: []
+          }
+        ],
+        errors: [],
+        constants: [],
+        events: []
+      };
+      
+      
+      
+    
+      const vault_pharaphase = "vault1";
+
+      before(async () => {
+        [vault_idlStoragePda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("idl_storage"), vault_programId.toBuffer(), userPubkey.toBuffer()],
+            program.programId
+          );
+          [vault_testMetadataPda] = PublicKey.findProgramAddressSync(
+            [
+              Buffer.from("tests_metadata"),
+              vault_programId.toBuffer(),
+              userPubkey.toBuffer(),
+              Buffer.from(vault_pharaphase),
+            ],
+            program.programId
+          );
+      })
+
+      it("should store vault IdlData on-chain", async () => {
+        const tx = await program.methods.storeIdlData(vault_idlData,vault_programId)
+            .accountsStrict({
+                idlStorage: vault_idlStoragePda,
+                authority: userPubkey,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([user1])
+            .rpc();
+            console.log(`tx is: https://explorer.solana.com/tx/${tx.toString()}?cluster=devnet`);
+            console.log("vault IDL storage PDA: ", vault_idlStoragePda.toBase58());
+      })
+      it("should generate vault metadata", async () => {
+        const tx = await program.methods.generateMetadata(vault_executionOrder, vault_programId, vault_program_name, vault_pharaphase)
+            .accountsStrict({
+                idlStorage: vault_idlStoragePda,
+                testMetadataConfig: vault_testMetadataPda,
+                authority: userPubkey,
+                systemProgram: SystemProgram.programId,
+            })
+            .signers([user1])
+            .rpc();
+
+      
+            console.log(`tx is: https://explorer.solana.com/tx/${tx.toString()}?cluster=devnet`);
+            console.log("vault testMetadata PDA: ", vault_testMetadataPda.toBase58());
+      })
+
+  })
 });
+
+
+
+  
